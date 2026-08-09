@@ -78,29 +78,6 @@ function App() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/40 z-0" />
 
         <div className="relative z-10 max-w-7xl mx-auto flex flex-col gap-6">
-          
-          {/* Top Ticker Badges */}
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-md border-3 border-black bg-[#CCFF00] px-3.5 py-1.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000]">
-              <Zap className="h-4 w-4 fill-black text-black" />
-              Monad 0.3s Block Time
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-md border-3 border-black bg-[#00E5FF] px-3.5 py-1.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000]">
-              <Sparkles className="h-4 w-4 text-black" />
-              Pyth Live: 1 MON = {monPriceFormatted}
-            </span>
-            <button
-              onClick={refetch}
-              disabled={isLoading}
-              className="inline-flex items-center gap-2 rounded-md border-3 border-black bg-white px-3.5 py-1.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:bg-[#FFD600] transition-all cursor-pointer"
-            >
-              <Database className="h-4 w-4 text-black" />
-              <span>
-                Source: {dataSource === 'indexer' ? 'Envio Indexer' : dataSource === 'rpc' ? 'Monad RPC' : 'Local'}
-              </span>
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
 
           {/* Main Neo-Brutalist Heading */}
           <div className="space-y-4 max-w-4xl">
