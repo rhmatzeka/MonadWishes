@@ -43,7 +43,7 @@ export default function Footer() {
             </svg>
           </a>
           <a
-            href="https://github.com/harkon666/MonadWishes"
+            href="https://github.com/rhmatzeka/MonadWhises"
             target="_blank"
             rel="noreferrer"
             className="rounded-lg border-2 border-black bg-white p-2 text-black hover:bg-[#00E5FF] hover:translate-x-[-2px] hover:translate-y-[-2px] shadow-[2px_2px_0px_0px_#000] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all flex items-center justify-center"
