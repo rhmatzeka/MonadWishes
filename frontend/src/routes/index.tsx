@@ -85,9 +85,6 @@ function App() {
                 DECODED.
               </span>
             </h1>
-            <p className="max-w-2xl text-lg font-bold text-slate-100 sm:text-xl border-l-4 border-[#CCFF00] pl-4 bg-black/40 p-2 border border-black/50 backdrop-blur-sm">
-              Pool kado ulang tahun bersama teman, hasilkan staking yield, dan dapatkan payout instan + NFT Booklet 100% on-chain.
-            </p>
           </div>
 
           {/* Action Buttons */}
