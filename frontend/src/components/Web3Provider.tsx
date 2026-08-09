@@ -31,7 +31,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
     setMounted(true)
   }, [])
 
-  const privyAppId = import.meta.env.VITE_PRIVY_APP_ID || 'cmsjz9g5v007a0el4gkpcvptt'
+  const privyAppId = import.meta.env.VITE_PRIVY_APP_ID || 'cmsjzas9f00hp0dkyqchbro5k'
 
   return (
     <QueryClientProvider client={queryClient}>
