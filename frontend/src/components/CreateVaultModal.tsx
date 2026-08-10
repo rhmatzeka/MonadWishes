@@ -40,46 +40,46 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg rounded-2xl border-4 border-black bg-[#FFFDF5] p-6 sm:p-8 shadow-[8px_8px_0px_0px_#000] text-black rise-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-2xl border-4 border-black bg-[#FFFDF5] p-5 sm:p-8 shadow-[6px_6px_0px_0px_#000] sm:shadow-[8px_8px_0px_0px_#000] text-black rise-in my-auto max-h-[90vh] overflow-y-auto">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b-4 border-black pb-4 mb-6">
+        <div className="flex items-center justify-between border-b-4 border-black pb-3 mb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#CCFF00] border-3 border-black shadow-[3px_3px_0px_0px_#000]">
-              <Gift className="h-6 w-6 text-black" />
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg bg-[#CCFF00] border-3 border-black shadow-[2px_2px_0px_0px_#000] sm:shadow-[3px_3px_0px_0px_#000]">
+              <Gift className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
             </div>
             <div>
-              <span className="bg-[#FFD600] px-2 py-0.5 border border-black font-black uppercase text-[10px] shadow-[1px_1px_0px_0px_#000]">
+              <span className="bg-[#FFD600] px-1.5 py-0.5 border border-black font-black uppercase text-[9px] sm:text-[10px] shadow-[1px_1px_0px_0px_#000]">
                 New Pool
               </span>
-              <h2 className="text-2xl font-black uppercase tracking-tight text-black">
+              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-black leading-tight">
                 Create Birthday Vault
               </h2>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg border-2 border-black bg-[#FF5252] p-2 text-black hover:bg-[#FF0000] hover:text-white shadow-[2px_2px_0px_0px_#000] transition-colors"
+            className="rounded-lg border-2 border-black bg-[#FF5252] p-1.5 sm:p-2 text-black hover:bg-[#FF0000] hover:text-white shadow-[2px_2px_0px_0px_#000] transition-colors"
           >
-            <X className="h-5 w-5 stroke-[3]" />
+            <X className="h-4.5 w-4.5 sm:h-5 sm:w-5 stroke-[3]" />
           </button>
         </div>
 
         {/* Live Pyth Ticker Badge */}
-        <div className="mb-6 flex items-center justify-between rounded-lg border-3 border-black bg-[#00E5FF] px-4 py-2.5 text-xs text-black font-black uppercase shadow-[3px_3px_0px_0px_#000]">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 animate-spin text-black" style={{ animationDuration: '4s' }} />
-            <span>Pyth Oracle Live Pricing</span>
+        <div className="mb-4 flex items-center justify-between rounded-lg border-3 border-black bg-[#00E5FF] px-3 py-2 text-[10px] sm:text-xs text-black font-black uppercase shadow-[2px_2px_0px_0px_#000] sm:shadow-[3px_3px_0px_0px_#000]">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Sparkles className="h-3.5 w-3.5 shrink-0 animate-spin text-black" style={{ animationDuration: '4s' }} />
+            <span className="truncate">Pyth Oracle Live Pricing</span>
           </div>
-          <span className="bg-white px-2 py-0.5 border border-black">1 MON = {monPriceFormatted}</span>
+          <span className="bg-white px-1.5 py-0.5 border border-black shrink-0">1 MON = {monPriceFormatted}</span>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Recipient Name */}
           <div>
-            <label className="block text-xs font-black uppercase text-black mb-1.5 flex items-center gap-1.5">
-              <User className="h-4 w-4 text-black" />
+            <label className="block text-[10px] sm:text-xs font-black uppercase text-black mb-1 flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 text-black" />
               Recipient Name
             </label>
             <input
@@ -88,14 +88,14 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
               placeholder="e.g. Alice Smith"
               value={recipientName}
               onChange={(e) => setRecipientName(e.target.value)}
-              className="w-full rounded-lg border-3 border-black bg-white px-4 py-3 text-sm text-black font-bold placeholder-slate-400 focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
+              className="w-full rounded-lg border-3 border-black bg-white px-3.5 py-2.5 text-xs sm:text-sm text-black font-bold placeholder-slate-400 focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
             />
           </div>
 
           {/* Recipient Wallet Address */}
           <div>
-            <label className="block text-xs font-black uppercase text-black mb-1.5 flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-black" />
+            <label className="block text-[10px] sm:text-xs font-black uppercase text-black mb-1 flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-black" />
               Recipient Wallet or Monad Address
             </label>
             <input
@@ -104,15 +104,15 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
               placeholder="0x..."
               value={recipientAddress}
               onChange={(e) => setRecipientAddress(e.target.value)}
-              className="w-full rounded-lg border-3 border-black bg-white px-4 py-3 text-sm text-black font-mono font-bold placeholder-slate-400 focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
+              className="w-full rounded-lg border-3 border-black bg-white px-3.5 py-2.5 text-xs sm:text-sm text-black font-mono font-bold placeholder-slate-400 focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
             />
           </div>
 
           {/* Goal Amount MON */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-black uppercase text-black mb-1.5 flex items-center gap-1.5">
-                <DollarSign className="h-4 w-4 text-black" />
+              <label className="block text-[10px] sm:text-xs font-black uppercase text-black mb-1 flex items-center gap-1.5">
+                <DollarSign className="h-3.5 w-3.5 text-black" />
                 Target Pool (MON)
               </label>
               <input
@@ -122,55 +122,55 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
                 required
                 value={targetAmountMon}
                 onChange={(e) => setTargetAmountMon(e.target.value)}
-                className="w-full rounded-lg border-3 border-black bg-white px-4 py-3 text-sm text-black font-bold focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
+                className="w-full rounded-lg border-3 border-black bg-white px-3.5 py-2.5 text-xs sm:text-sm text-black font-bold focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
               />
-              <span className="mt-1 block text-[11px] font-black uppercase text-slate-700">
-                ≈ ${usdValue} USD (Pyth)
+              <span className="mt-1 block text-[10px] font-black uppercase text-slate-700">
+                ≈ ${usdValue} USD
               </span>
             </div>
 
             {/* Duration Days */}
             <div>
-              <label className="block text-xs font-black uppercase text-black mb-1.5 flex items-center gap-1.5">
-                <Calendar className="h-4 w-4 text-black" />
+              <label className="block text-[10px] sm:text-xs font-black uppercase text-black mb-1 flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-black" />
                 Lock Duration
               </label>
               <select
                 value={durationDays}
-                onChange={(e) => setDurationDays(e.target.value)}
-                className="w-full rounded-lg border-3 border-black bg-white px-4 py-3 text-sm text-black font-bold focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
+                onChange={(e) => setTargetAmountMon && setDurationDays(e.target.value)}
+                className="w-full rounded-lg border-3 border-black bg-white px-3.5 py-2.5 text-xs sm:text-sm text-black font-bold focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
               >
                 <option value="7">7 Days</option>
                 <option value="14">14 Days</option>
-                <option value="30">30 Days (Recommended)</option>
+                <option value="30">30 Days</option>
                 <option value="60">60 Days</option>
               </select>
-              <span className="mt-1 block text-[11px] font-black uppercase text-slate-700">
-                Auto-unlock at 00:00 UTC
+              <span className="mt-1 block text-[10px] font-black uppercase text-slate-700">
+                Auto-unlock 00:00
               </span>
             </div>
           </div>
 
           {/* Staking Yield Info Banner */}
-          <div className="rounded-lg bg-[#CCFF00] p-3 text-xs text-black border-3 border-black shadow-[3px_3px_0px_0px_#000]">
+          <div className="rounded-lg bg-[#CCFF00] p-2.5 text-[10px] sm:text-xs text-black border-3 border-black shadow-[2px_2px_0px_0px_#000] sm:shadow-[3px_3px_0px_0px_#000]">
             <p className="font-black uppercase">✨ Monad Social Yield Active</p>
-            <p className="text-[11px] font-bold text-black mt-0.5">
-              Contributions are delegated to Monad Native Staking precompile (<code>0x1000</code>) earning 0.5%/month prorated yield.
+            <p className="text-[10px] sm:text-[11px] font-bold text-black mt-0.5 leading-snug">
+              Contributions are delegated to Monad Native Staking precompile (<code>0x1000</code>) earning yield.
             </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 flex items-center justify-end gap-3 pt-2">
+          <div className="mt-5 flex items-center justify-end gap-3 pt-1">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border-2 border-black bg-white px-5 py-2.5 text-sm font-black uppercase text-black hover:bg-slate-200 transition-colors shadow-[2px_2px_0px_0px_#000]"
+              className="rounded-lg border-2 border-black bg-white px-4 py-2 text-xs sm:text-sm font-black uppercase text-black hover:bg-slate-200 transition-colors shadow-[2px_2px_0px_0px_#000]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 rounded-lg border-3 border-black bg-[#CCFF00] px-6 py-2.5 text-sm font-black uppercase text-black shadow-[4px_4px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all"
+              className="flex items-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-5 py-2 text-xs sm:text-sm font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all"
             >
               <Gift className="h-4 w-4 stroke-[3]" />
               <span>Create Vault</span>
