@@ -81,8 +81,8 @@ export default function VaultDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm overflow-y-auto py-6">
-      <div className="relative w-full max-w-2xl rounded-2xl border-4 border-black bg-[#FFFDF5] p-6 sm:p-8 shadow-[8px_8px_0px_0px_#000] text-black rise-in my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-2xl rounded-2xl border-4 border-black bg-[#FFFDF5] p-5 sm:p-8 shadow-[6px_6px_0px_0px_#000] sm:shadow-[8px_8px_0px_0px_#000] text-black rise-in my-auto max-h-[90vh] overflow-y-auto">
         
         {/* Close Button */}
         <button
@@ -93,30 +93,30 @@ export default function VaultDetailsModal({
         </button>
 
         {/* Modal Header */}
-        <div className="flex items-center gap-4 mb-6 pr-10">
-          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-[#CCFF00] border-3 border-black shadow-[3px_3px_0px_0px_#000] shrink-0">
-            <Gift className="h-7 w-7 text-black" />
+        <div className="flex items-center gap-3 sm:gap-4 mb-5 pr-8">
+          <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-lg bg-[#CCFF00] border-3 border-black shadow-[2px_2px_0px_0px_#000] sm:shadow-[3px_3px_0px_0px_#000] shrink-0">
+            <Gift className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
           </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-2xl font-black uppercase tracking-tight text-black">
-                {vault.recipientName}'s Birthday Vault
+          <div className="min-w-0">
+            <div className="flex flex-col gap-1.5">
+              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-black leading-tight truncate">
+                {vault.recipientName}'s Vault
               </h2>
               {vault.isClaimed && (
-                <div className="flex items-center gap-2">
-                  <span className="rounded-md border-2 border-black bg-emerald-300 px-2.5 py-0.5 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_#000] flex items-center gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Claimed
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-md border-2 border-black bg-emerald-300 px-2 py-0.5 text-[9px] sm:text-xs font-black uppercase text-black shadow-[1.5px_1.5px_0px_0px_#000] flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" /> Claimed
                   </span>
                   <button
                     onClick={() => setShowNftModal(true)}
-                    className="rounded-md border-2 border-black bg-[#00E5FF] px-2.5 py-0.5 text-xs font-black uppercase text-black hover:bg-[#CCFF00] shadow-[2px_2px_0px_0px_#000] transition-all flex items-center gap-1 cursor-pointer"
+                    className="rounded-md border-2 border-black bg-[#00E5FF] px-2 py-0.5 text-[9px] sm:text-xs font-black uppercase text-black hover:bg-[#CCFF00] shadow-[1.5px_1.5px_0px_0px_#000] transition-all flex items-center gap-1 cursor-pointer"
                   >
-                    <Trophy className="h-3.5 w-3.5" /> NFT Booklet
+                    <Trophy className="h-3 w-3" /> NFT Booklet
                   </button>
                 </div>
               )}
             </div>
-            <p className="text-xs text-black font-mono font-bold mt-0.5">
+            <p className="text-[10px] sm:text-xs text-black font-mono font-bold mt-1 truncate">
               Recipient: {vault.recipientAddress}
             </p>
           </div>
@@ -137,42 +137,42 @@ export default function VaultDetailsModal({
             />
           </div>
 
-          {/* Amount Breakdown Grid */}
-          <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t-3 border-black text-center">
-            <div className="bg-[#FFFDF5] p-2 border-2 border-black shadow-[2px_2px_0px_0px_#000] rounded-lg">
-              <span className="block text-[10px] font-black uppercase text-slate-700">Collected Principal</span>
-              <span className="text-base font-black text-black">{vault.totalCollectedMon.toFixed(2)} MON</span>
-              <span className="block text-[10px] font-bold text-slate-600">≈ ${collectedUsd}</span>
-            </div>
-            <div className="bg-[#FFD600] p-2 border-2 border-black shadow-[2px_2px_0px_0px_#000] rounded-lg">
-              <span className="block text-[10px] font-black uppercase text-black flex items-center justify-center gap-1">
-                <Sparkles className="h-3 w-3" /> Monad Yield
-              </span>
-              <span className="text-base font-black text-black">+{simulatedYieldMon.toFixed(4)} MON</span>
-              <span className="block text-[10px] font-black text-black">0.5% APY Staked</span>
-            </div>
-            <div className="bg-[#00E5FF] p-2 border-2 border-black shadow-[2px_2px_0px_0px_#000] rounded-lg">
-              <span className="block text-[10px] font-black uppercase text-black">Total Payout</span>
-              <span className="text-base font-black text-black">{totalPayoutMon.toFixed(2)} MON</span>
-              <span className="block text-[10px] font-black text-black">≈ ${totalPayoutUsd}</span>
-            </div>
+        {/* Amount Breakdown Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4 pt-4 border-t-3 border-black text-center">
+          <div className="bg-[#FFFDF5] p-2.5 border-2 border-black shadow-[2px_2px_0px_0px_#000] rounded-lg">
+            <span className="block text-[10px] font-black uppercase text-slate-700">Collected Principal</span>
+            <span className="text-base font-black text-black">{vault.totalCollectedMon.toFixed(2)} MON</span>
+            <span className="block text-[10px] font-bold text-slate-600 mt-0.5">≈ ${collectedUsd}</span>
           </div>
+          <div className="bg-[#FFD600] p-2.5 border-2 border-black shadow-[2px_2px_0px_0px_#000] rounded-lg">
+            <span className="block text-[10px] font-black uppercase text-black flex items-center justify-center gap-1">
+              <Sparkles className="h-3 w-3" /> Monad Yield
+            </span>
+            <span className="text-base font-black text-black">+{simulatedYieldMon.toFixed(4)} MON</span>
+            <span className="block text-[10px] font-black text-black mt-0.5">0.5% APY Staked</span>
+          </div>
+          <div className="bg-[#00E5FF] p-2.5 border-2 border-black shadow-[2px_2px_0px_0px_#000] rounded-lg">
+            <span className="block text-[10px] font-black uppercase text-black">Total Payout</span>
+            <span className="text-base font-black text-black">{totalPayoutMon.toFixed(2)} MON</span>
+            <span className="block text-[10px] font-black text-black mt-0.5">≈ ${totalPayoutUsd}</span>
+          </div>
+        </div>
         </div>
 
         {/* Hackathon Demo Time-Travel Banner */}
-        <div className="mb-6 rounded-xl border-3 border-black bg-[#FFD600] p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[4px_4px_0px_0px_#000]">
-          <div>
+        <div className="mb-6 rounded-xl border-3 border-black bg-[#FFD600] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-[4px_4px_0px_0px_#000]">
+          <div className="text-left w-full md:w-auto">
             <span className="text-xs font-black uppercase text-black flex items-center gap-1.5">
-              <PlayCircle className="h-4 w-4" /> Hackathon Demo Mode (3-Min Pitch)
+              <PlayCircle className="h-4 w-4 shrink-0" /> Hackathon Demo Mode
             </span>
-            <p className="text-[11px] font-bold text-black mt-0.5">
-              Bypass 30-day time-lock to simulate 00:00 instant payout & on-chain SVG NFT minting.
+            <p className="text-[11px] font-bold text-black mt-0.5 leading-snug">
+              Bypass 30-day time-lock to simulate 00:00 instant payout & on-chain SVG NFT.
             </p>
           </div>
           <button
             onClick={() => handleClaim(true)}
             disabled={vault.isClaimed || vault.totalCollectedMon === 0}
-            className="shrink-0 flex items-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+            className="shrink-0 flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer w-full md:w-auto"
           >
             <Sparkles className="h-4 w-4 fill-black" />
             <span>Time Travel Release</span>
@@ -187,39 +187,40 @@ export default function VaultDetailsModal({
               Send Micro-Contribution & Birthday Wish
             </h3>
             
-            {/* Quick Amount Buttons */}
-            <div className="flex items-center gap-2 mb-3">
-              {['0.5', '1.0', '2.5', '5.0'].map((val) => (
-                <button
-                  key={val}
-                  type="button"
-                  onClick={() => setContributeAmount(val)}
-                  className={`rounded-md border-2 border-black px-3 py-1 text-xs font-black transition-all ${
-                    contributeAmount === val
-                      ? 'bg-[#CCFF00] text-black shadow-[2px_2px_0px_0px_#000]'
-                      : 'bg-white text-black hover:bg-[#FFD600]'
-                  }`}
-                >
-                  {val} MON
-                </button>
-              ))}
-              <span className="text-[10px] font-black uppercase text-black ml-auto bg-[#00E5FF] px-2 py-0.5 border border-black">
+            <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 overflow-x-auto py-1">
+                {['0.5', '1.0', '2.5', '5.0'].map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setContributeAmount(val)}
+                    className={`rounded-md border-2 border-black px-2.5 py-1 text-xs font-black shrink-0 transition-all ${
+                      contributeAmount === val
+                        ? 'bg-[#CCFF00] text-black shadow-[2px_2px_0px_0px_#000]'
+                        : 'bg-white text-black hover:bg-[#FFD600]'
+                    }`}
+                  >
+                    {val} MON
+                  </button>
+                ))}
+              </div>
+              <span className="text-[10px] font-black uppercase text-black ml-0 xs:ml-auto bg-[#00E5FF] px-2 py-0.5 border border-black self-start xs:self-auto shrink-0">
                 Gasless EIP-7702
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2">
               <input
                 type="text"
                 required
                 placeholder="Write a sweet birthday greeting message..."
                 value={greetingMsg}
                 onChange={(e) => setGreetingMsg(e.target.value)}
-                className="flex-1 rounded-lg border-3 border-black bg-white px-4 py-2.5 text-xs text-black font-bold placeholder-slate-400 focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
+                className="flex-1 rounded-lg border-3 border-black bg-white px-4 py-2.5 text-xs text-black font-bold placeholder-slate-400 focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000] w-full"
               />
               <button
                 type="submit"
-                className="flex items-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer"
+                className="flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer w-full xs:w-auto"
               >
                 <Send className="h-4 w-4 stroke-[3]" />
                 <span>Send Wish</span>
