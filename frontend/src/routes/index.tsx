@@ -62,7 +62,7 @@ function App() {
   return (
     <div className="min-h-screen bg-[#FFFDF5] text-black font-sans selection:bg-[#CCFF00] selection:text-black">
       {/* Neo-Brutalist Hero Header Section with Video Background */}
-      <section className="relative overflow-hidden border-b-4 border-black bg-black px-4 py-16 sm:px-12 sm:py-24 shadow-[0_6px_0px_0px_#000] min-h-[50vh] sm:min-h-0 flex items-center">
+      <section className="relative overflow-hidden border-b-4 border-black bg-black px-6 py-20 sm:px-12 sm:py-32 shadow-[0_6px_0px_0px_#000] min-h-[70vh] sm:min-h-0 flex items-center justify-start text-left">
         {/* Video Background */}
         <video
           autoPlay
@@ -75,7 +75,7 @@ function App() {
         {/* Dark Vignette Overlay for High Legibility */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/40 z-0" />
 
-        <div className="relative z-10 max-w-7xl mx-auto flex flex-col gap-6">
+        <div className="relative z-10 max-w-7xl mx-auto flex flex-col items-start gap-6 w-full text-left">
 
           {/* Main Neo-Brutalist Heading */}
           <div className="space-y-4 max-w-4xl">
