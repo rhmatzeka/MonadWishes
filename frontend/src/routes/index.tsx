@@ -62,7 +62,7 @@ function App() {
   return (
     <div className="min-h-screen bg-[#FFFDF5] text-black font-sans selection:bg-[#CCFF00] selection:text-black">
       {/* Neo-Brutalist Hero Header Section with Video Background */}
-      <section className="relative overflow-hidden border-b-4 border-black bg-black px-6 py-12 sm:px-12 sm:py-16 shadow-[0_6px_0px_0px_#000] min-h-[50vh] sm:min-h-[70vh] lg:min-h-[80vh] flex items-center justify-start text-left">
+      <section className="relative overflow-hidden border-b-4 border-black bg-black px-6 py-20 sm:px-12 sm:py-16 shadow-[0_6px_0px_0px_#000] min-h-[90vh] sm:min-h-[70vh] lg:min-h-[80vh] flex items-center justify-start text-left">
         {/* Video Background */}
         <video
           autoPlay
