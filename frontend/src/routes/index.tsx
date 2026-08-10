@@ -62,7 +62,7 @@ function App() {
   return (
     <div className="min-h-screen bg-[#FFFDF5] text-black font-sans selection:bg-[#CCFF00] selection:text-black">
       {/* Neo-Brutalist Hero Header Section with Video Background */}
-      <section className="relative overflow-hidden border-b-4 border-black bg-black px-6 py-12 sm:px-12 sm:py-20 shadow-[0_6px_0px_0px_#000]">
+      <section className="relative overflow-hidden border-b-4 border-black bg-black px-4 py-16 sm:px-12 sm:py-24 shadow-[0_6px_0px_0px_#000] min-h-[50vh] sm:min-h-0 flex items-center">
         {/* Video Background */}
         <video
           autoPlay
@@ -88,17 +88,17 @@ function App() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-4 w-full">
             <button
               onClick={() => setIsCreateOpen(true)}
-              className="flex items-center gap-2 rounded-lg border-4 border-black bg-[#CCFF00] px-6 py-3.5 text-base font-black uppercase text-black shadow-[5px_5px_0px_0px_#000] hover:bg-[#FFD600] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all cursor-pointer"
+              className="flex items-center justify-center gap-2 rounded-lg border-4 border-black bg-[#CCFF00] px-6 py-3.5 text-base font-black uppercase text-black shadow-[5px_5px_0px_0px_#000] hover:bg-[#FFD600] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all cursor-pointer w-full sm:w-auto"
             >
               <Plus className="h-5 w-5 stroke-[3]" />
               <span>Create Birthday Vault</span>
             </button>
             <a
               href="#vaults-section"
-              className="flex items-center gap-2 rounded-lg border-4 border-black bg-white px-6 py-3.5 text-base font-black uppercase text-black shadow-[5px_5px_0px_0px_#000] hover:bg-[#00E5FF] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all"
+              className="flex items-center justify-center gap-2 rounded-lg border-4 border-black bg-white px-6 py-3.5 text-base font-black uppercase text-black shadow-[5px_5px_0px_0px_#000] hover:bg-[#00E5FF] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all w-full sm:w-auto text-center"
             >
               <span>Explore All Vaults</span>
               <ArrowRight className="h-5 w-5 stroke-[3]" />
