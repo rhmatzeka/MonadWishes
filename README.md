@@ -10,6 +10,8 @@
 
 ---
 
+![MonadWishes landing page: create a birthday vault or explore vaults](docs/images/preview.png)
+
 ## 🌐 Live Application & Links
 
 - **🚀 Live Web App**: [https://monad-wishes-xi.vercel.app/](https://monad-wishes-xi.vercel.app/)
