@@ -154,7 +154,7 @@ export default function VaultDetailsModal({
         <div className="mb-6 rounded-xl border-3 border-black bg-white p-5 shadow-[4px_4px_0px_0px_#000]">
           <div className="flex items-center justify-between text-sm font-black uppercase mb-2">
             <span>Target Gift Pool Progress</span>
-            <span className="bg-[#CCFF00] px-2 border border-black shadow-[1px_1px_0px_0px_#000]">{percent}%</span>
+            <span className="shrink-0 whitespace-nowrap bg-[#CCFF00] px-2 border border-black shadow-[1px_1px_0px_0px_#000]">{percent}%</span>
           </div>
           
           {/* Progress Bar */}
