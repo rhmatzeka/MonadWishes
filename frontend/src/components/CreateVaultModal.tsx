@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { X, Gift, Sparkles, Calendar, DollarSign, User, ShieldCheck } from 'lucide-react'
+import { isAddress } from 'viem'
 import { usePythPrice } from '../hooks/usePythPrice'
+import { formatUsd, recipientNameError } from '../lib/vault'
 
 interface CreateVaultModalProps {
   isOpen: boolean
@@ -8,32 +10,39 @@ interface CreateVaultModalProps {
   onCreate: (vault: {
     recipientName: string
     recipientAddress: string
-    targetAmountMon: number
+    targetAmountMon: string
     durationDays: number
   }) => void
 }
 
 export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVaultModalProps) {
-  const { price: monPrice, formatted: monPriceFormatted } = usePythPrice()
+  const { price: monPrice, formatted: monPriceFormatted, age: priceAge } = usePythPrice()
 
   const [recipientName, setRecipientName] = useState('')
   const [recipientAddress, setRecipientAddress] = useState('')
   const [targetAmountMon, setTargetAmountMon] = useState('10')
   const [durationDays, setDurationDays] = useState('30')
+  const [formError, setFormError] = useState<string | null>(null)
 
   if (!isOpen) return null
 
   const monNum = parseFloat(targetAmountMon) || 0
-  const usdValue = (monNum * monPrice).toFixed(2)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!recipientName || !recipientAddress || monNum <= 0) return
+    const name = recipientName.trim()
+    const address = recipientAddress.trim()
+    const error =
+      recipientNameError(name) ??
+      (isAddress(address) ? null : 'Enter a valid 0x wallet address.') ??
+      (monNum > 0 ? null : 'Target must be more than 0 MON.')
+    setFormError(error)
+    if (error) return
 
     onCreate({
-      recipientName,
-      recipientAddress,
-      targetAmountMon: monNum,
+      recipientName: name,
+      recipientAddress: address,
+      targetAmountMon,
       durationDays: parseInt(durationDays) || 30,
     })
     onClose()
@@ -70,9 +79,9 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
         <div className="mb-4 flex items-center justify-between rounded-lg border-3 border-black bg-[#00E5FF] px-3 py-2 text-[10px] sm:text-xs text-black font-black uppercase shadow-[2px_2px_0px_0px_#000] sm:shadow-[3px_3px_0px_0px_#000]">
           <div className="flex items-center gap-1.5 min-w-0">
             <Sparkles className="h-3.5 w-3.5 shrink-0 animate-spin text-black" style={{ animationDuration: '4s' }} />
-            <span className="truncate">Pyth Oracle Live Pricing</span>
+            <span className="truncate">Pyth Oracle Price</span>
           </div>
-          <span className="bg-white px-1.5 py-0.5 border border-black shrink-0">1 MON = {monPriceFormatted}</span>
+          <span className="bg-white px-1.5 py-0.5 border border-black shrink-0">1 MON = {monPriceFormatted}{priceAge ? ` (${priceAge} ago)` : ''}</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,6 +94,7 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
             <input
               type="text"
               required
+              maxLength={48}
               placeholder="e.g. Alice Smith"
               value={recipientName}
               onChange={(e) => setRecipientName(e.target.value)}
@@ -125,7 +135,7 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
                 className="w-full rounded-lg border-3 border-black bg-white px-3.5 py-2.5 text-xs sm:text-sm text-black font-bold focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
               />
               <span className="mt-1 block text-[10px] font-black uppercase text-slate-700">
-                ≈ ${usdValue} USD
+                ≈ {formatUsd(monNum, monPrice)} USD
               </span>
             </div>
 
@@ -137,7 +147,7 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
               </label>
               <select
                 value={durationDays}
-                onChange={(e) => setTargetAmountMon && setDurationDays(e.target.value)}
+                onChange={(e) => setDurationDays(e.target.value)}
                 className="w-full rounded-lg border-3 border-black bg-white px-3.5 py-2.5 text-xs sm:text-sm text-black font-bold focus:bg-[#FFFDF5] focus:outline-none shadow-[2px_2px_0px_0px_#000]"
               >
                 <option value="7">7 Days</option>
@@ -146,18 +156,24 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
                 <option value="60">60 Days</option>
               </select>
               <span className="mt-1 block text-[10px] font-black uppercase text-slate-700">
-                Auto-unlock 00:00
+                Unlocks after {durationDays} days
               </span>
             </div>
           </div>
 
           {/* Staking Yield Info Banner */}
           <div className="rounded-lg bg-[#CCFF00] p-2.5 text-[10px] sm:text-xs text-black border-3 border-black shadow-[2px_2px_0px_0px_#000] sm:shadow-[3px_3px_0px_0px_#000]">
-            <p className="font-black uppercase">✨ Monad Social Yield Active</p>
+            <p className="font-black uppercase">✨ Yield Bonus</p>
             <p className="text-[10px] sm:text-[11px] font-bold text-black mt-0.5 leading-snug">
-              Contributions are delegated to Monad Native Staking precompile (<code>0x1000</code>) earning yield.
+              The vault adds up to 0.5% per 30 days at release, paid from the protocol reserve while it lasts.
             </p>
           </div>
+
+          {formError && (
+            <p role="alert" className="rounded-lg border-3 border-black bg-[#FF5252] p-2.5 text-xs font-black text-black">
+              {formError}
+            </p>
+          )}
 
           {/* Action Buttons */}
           <div className="mt-5 flex items-center justify-end gap-3 pt-1">

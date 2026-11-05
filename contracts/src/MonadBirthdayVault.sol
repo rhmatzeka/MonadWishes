@@ -37,8 +37,17 @@ contract MonadBirthdayVault is Ownable, ReentrancyGuard {
         uint256 createdAt;
     }
 
+    uint256 public constant MAX_NAME_LENGTH = 48;
+    uint256 public constant MAX_MESSAGE_LENGTH = 280;
+
     uint256 public vaultCounter;
     MonadBirthdayNFT public nftContract;
+
+    /// @notice Sum of principal still locked in unclaimed vaults. Yield is only paid from MON above this.
+    uint256 public totalLockedPrincipal;
+
+    /// @notice Lets the vault creator, recipient or owner release before the birthday (hackathon demo).
+    bool public demoModeEnabled = true;
 
     mapping(uint256 => Vault) public vaults;
     mapping(uint256 => Greeting[]) public vaultGreetings;
@@ -74,12 +83,42 @@ contract MonadBirthdayVault is Ownable, ReentrancyGuard {
         uint256 nftTokenId
     );
 
+    event DemoModeUpdated(bool enabled);
+
     constructor(address _nftAddress, address initialOwner) Ownable(initialOwner) {
         nftContract = MonadBirthdayNFT(_nftAddress);
     }
 
     function setNFTContract(address _nftAddress) external onlyOwner {
         nftContract = MonadBirthdayNFT(_nftAddress);
+    }
+
+    function setDemoMode(bool _enabled) external onlyOwner {
+        demoModeEnabled = _enabled;
+        emit DemoModeUpdated(_enabled);
+    }
+
+    /// @notice MON held above locked principal, available to pay yield bonuses.
+    function yieldReserve() public view returns (uint256) {
+        uint256 balance = address(this).balance;
+        return balance > totalLockedPrincipal ? balance - totalLockedPrincipal : 0;
+    }
+
+    /// @dev Names end up inside the NFT JSON and SVG, so keep them short and free of markup/quote characters.
+    function _isSafeName(string memory _name) internal pure returns (bool) {
+        bytes memory b = bytes(_name);
+        if (b.length == 0 || b.length > MAX_NAME_LENGTH) return false;
+        for (uint256 i; i < b.length; i++) {
+            bytes1 c = b[i];
+            if (c < 0x20 || c == '"' || c == "<" || c == ">" || c == "&" || c == "\\") return false;
+        }
+        return true;
+    }
+
+    /// @dev Yield accrues from creation until the birthday, never after.
+    function _accruedSeconds(Vault storage vault) internal view returns (uint256) {
+        uint256 end = block.timestamp < vault.birthdayTimestamp ? block.timestamp : vault.birthdayTimestamp;
+        return end > vault.createdAt ? end - vault.createdAt : 0;
     }
 
     /**
@@ -96,7 +135,8 @@ contract MonadBirthdayVault is Ownable, ReentrancyGuard {
         uint256 _targetAmount
     ) external returns (uint256) {
         require(_recipient != address(0), "Invalid recipient address");
-        require(_durationInDays > 0, "Duration must be > 0 days");
+        require(_durationInDays > 0 && _durationInDays <= 366, "Duration must be 1-366 days");
+        require(_isSafeName(_recipientName), "Invalid recipient name");
 
         vaultCounter++;
         uint256 unlockTime = block.timestamp + (_durationInDays * 1 days);
@@ -138,8 +178,10 @@ contract MonadBirthdayVault is Ownable, ReentrancyGuard {
         require(block.timestamp < vault.birthdayTimestamp, "Vault unlock time reached or closed");
         require(!vault.isClaimed, "Vault already claimed");
         require(msg.value > 0, "Contribution must be > 0 MON");
+        require(bytes(_message).length <= MAX_MESSAGE_LENGTH, "Message too long");
 
         vault.totalCollected += msg.value;
+        totalLockedPrincipal += msg.value;
 
         vaultGreetings[_vaultId].push(Greeting({
             sender: msg.sender,
@@ -180,38 +222,36 @@ contract MonadBirthdayVault is Ownable, ReentrancyGuard {
         if (!_isDemoMode) {
             require(block.timestamp >= vault.birthdayTimestamp, "Birthday timestamp not reached yet");
         } else {
-            // Demo mode can only be triggered by creator or owner for hackathon presentation safety
+            require(demoModeEnabled, "Demo mode disabled");
             require(msg.sender == vault.creator || msg.sender == owner() || msg.sender == vault.recipient, "Unauthorized demo trigger");
         }
 
         vault.isClaimed = true;
 
-        // Calculate Yield (Prorated 0.5% monthly simulated yield bonus)
-        uint256 durationSec = block.timestamp > vault.createdAt ? (block.timestamp - vault.createdAt) : 1 days;
-        uint256 yieldBonus = calculateYieldBonus(vault.totalCollected, durationSec);
-        uint256 totalPayout = vault.totalCollected + yieldBonus;
+        // Prorated 0.5% / 30 days bonus, paid only from the reserve (never from other vaults' principal).
+        uint256 principal = vault.totalCollected;
+        uint256 yieldBonus = calculateYieldBonus(principal, _accruedSeconds(vault));
+        uint256 reserve = yieldReserve();
+        if (yieldBonus > reserve) yieldBonus = reserve;
+        uint256 payoutAmount = principal + yieldBonus;
+        totalLockedPrincipal -= principal;
 
-        // Mint Dynamic On-Chain SVG NFT Booklet to recipient
-        uint256 contributorCount = vaultGreetings[_vaultId].length;
         uint256 mintedTokenId = 0;
-
         if (address(nftContract) != address(0)) {
             mintedTokenId = nftContract.mintMemoryBooklet(
                 vault.recipient,
                 vault.recipientName,
-                totalPayout,
-                contributorCount,
+                payoutAmount,
+                vaultGreetings[_vaultId].length,
                 vault.birthdayTimestamp
             );
             vault.nftTokenId = mintedTokenId;
         }
 
-        // Transfer funds (principal from vault balance + yield bonus from protocol reserve if available)
-        uint256 payoutAmount = totalPayout <= address(this).balance ? totalPayout : vault.totalCollected;
         (bool success, ) = vault.recipient.call{value: payoutAmount}("");
         require(success, "Transfer to recipient failed");
 
-        emit GiftClaimed(_vaultId, vault.recipient, vault.totalCollected, yieldBonus, payoutAmount, mintedTokenId);
+        emit GiftClaimed(_vaultId, vault.recipient, principal, yieldBonus, payoutAmount, mintedTokenId);
     }
 
     /**
@@ -244,10 +284,9 @@ contract MonadBirthdayVault is Ownable, ReentrancyGuard {
         } else {
             timeRemaining = vault.birthdayTimestamp - block.timestamp;
         }
-        uint256 durationSec = block.timestamp > vault.createdAt ? (block.timestamp - vault.createdAt) : 1 days;
-        currentYieldEstimate = calculateYieldBonus(vault.totalCollected, durationSec);
+        currentYieldEstimate = calculateYieldBonus(vault.totalCollected, _accruedSeconds(vaults[_vaultId]));
     }
 
-    // Allow contract to receive MON native token for yield reserve
+    // Anyone can top up the yield reserve by sending MON directly
     receive() external payable {}
 }

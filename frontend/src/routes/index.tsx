@@ -1,21 +1,44 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Gift, Plus, Sparkles, Shield, Clock, Users, Flame, ChevronRight, Zap, RefreshCw, Database, ArrowRight } from 'lucide-react'
+import { Gift, Plus, Clock, Users, Flame, ChevronRight, ArrowRight } from 'lucide-react'
 import CreateVaultModal from '../components/CreateVaultModal'
-import VaultDetailsModal, { type VaultData } from '../components/VaultDetailsModal'
+import VaultDetailsModal from '../components/VaultDetailsModal'
 import TransactionToast from '../components/TransactionToast'
-import NetworkSwitchBanner from '../components/NetworkSwitchBanner'
-import { usePythPrice } from '../hooks/usePythPrice'
 import { useVaultClient } from '../hooks/useVaultClient'
+import { progressPercent } from '../lib/vault'
 
 export const Route = createFileRoute('/')({ component: App })
 
+const POSTER_SRC = '/video/hero-poster.jpg'
+
+// The poster paints first; the video only loads after hydration and never on Save-Data or reduced motion.
+function HeroBackground() {
+  const [playVideo, setPlayVideo] = useState(false)
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData
+    setPlayVideo(!reducedMotion && !saveData)
+  }, [])
+
+  const mediaClass = 'absolute inset-0 w-full h-full object-cover z-0 opacity-50'
+
+  return (
+    <>
+      <img src={POSTER_SRC} alt="" fetchPriority="high" className={mediaClass} />
+      {playVideo && (
+        <video autoPlay loop muted playsInline poster={POSTER_SRC} className={mediaClass} src="/video/hero-bg.mp4" />
+      )}
+    </>
+  )
+}
+
 function App() {
-  const { formatted: monPriceFormatted } = usePythPrice()
   const {
     vaults,
-    isLoading,
-    dataSource,
+    status,
+    demoModeEnabled,
+    walletAddress,
     toast,
     closeToast,
     createVault,
@@ -25,53 +48,18 @@ function App() {
   } = useVaultClient()
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [selectedVault, setSelectedVault] = useState<VaultData | null>(null)
-  
+  const [selectedVaultId, setSelectedVaultId] = useState<string | null>(null)
+  const selectedVault = vaults.find((v) => v.id === selectedVaultId)
+
   // Local state to hide specific vaults deleted/removed by user
   const [hiddenVaultIds, setHiddenVaultIds] = useState<string[]>([])
-
-  const handleCreateVault = async (newVaultData: {
-    recipientName: string
-    recipientAddress: string
-    targetAmountMon: number
-    durationDays: number
-  }) => {
-    try {
-      await createVault(newVaultData)
-    } catch {
-      // Handled via toast inside useVaultClient
-    }
-  }
-
-  const handleContribute = async (vaultId: string, amountMon: number, message: string) => {
-    try {
-      await contribute(vaultId, amountMon, message)
-    } catch {
-      // Handled via toast inside useVaultClient
-    }
-  }
-
-  const handleReleaseGift = async (vaultId: string, isDemoMode: boolean) => {
-    try {
-      await releaseGift(vaultId, isDemoMode)
-    } catch {
-      // Handled via toast inside useVaultClient
-    }
-  }
+  const visibleVaults = vaults.filter((v) => !hiddenVaultIds.includes(v.id))
 
   return (
     <div className="min-h-screen bg-[#FFFDF5] text-black font-sans selection:bg-[#CCFF00] selection:text-black">
       {/* Neo-Brutalist Hero Header Section with Video Background */}
       <section className="relative overflow-hidden border-b-4 border-black bg-black px-6 py-12 sm:px-12 sm:py-16 shadow-[0_6px_0px_0px_#000] min-h-[68vh] sm:min-h-[70vh] lg:min-h-[80vh] flex items-center justify-start text-left">
-        {/* Video Background */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover z-0 opacity-50 filter saturate-150 contrast-125"
-          src="/video/hero-bg.mp4"
-        />
+        <HeroBackground />
         {/* Dark Vignette Overlay for High Legibility */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/40 z-0" />
 
@@ -122,7 +110,7 @@ function App() {
             <span className="text-slate-500">•</span>
             <span>PRIVY SOCIAL LOGIN</span>
             <span className="text-slate-500">•</span>
-            <span className="text-[#00E5FF]">✦ NATIVE STAKING PRECOMPILE (0x1000)</span>
+            <span className="text-[#00E5FF]">✦ YIELD BONUS 0.5% / 30 DAYS</span>
             <span className="text-slate-500">•</span>
             <span>PYTH LIVE MON/USD PRICING</span>
             <span className="text-slate-500">•</span>
@@ -136,7 +124,7 @@ function App() {
             <span className="text-slate-500">•</span>
             <span>PRIVY SOCIAL LOGIN</span>
             <span className="text-slate-500">•</span>
-            <span className="text-[#00E5FF]">✦ NATIVE STAKING PRECOMPILE (0x1000)</span>
+            <span className="text-[#00E5FF]">✦ YIELD BONUS 0.5% / 30 DAYS</span>
             <span className="text-slate-500">•</span>
             <span>PYTH LIVE MON/USD PRICING</span>
             <span className="text-slate-500">•</span>
@@ -181,22 +169,43 @@ function App() {
           </div>
         </div>
 
+        {status === 'error' && vaults.length === 0 && (
+          <div className="rounded-2xl border-4 border-black bg-[#FF5252] p-6 text-center shadow-[6px_6px_0px_0px_#000]">
+            <p className="font-black uppercase text-black">Could not reach Monad Testnet.</p>
+            <button
+              onClick={refetch}
+              className="mt-3 rounded-md border-3 border-black bg-white px-4 py-2 text-sm font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] cursor-pointer"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {status === 'ready' && visibleVaults.length === 0 && (
+          <div className="rounded-2xl border-4 border-black bg-white p-6 text-center shadow-[6px_6px_0px_0px_#000]">
+            <p className="font-black uppercase text-black">No vaults to show yet. Create the first one!</p>
+          </div>
+        )}
+
         {/* Vault Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {vaults
-            .filter((v) => !hiddenVaultIds.includes(v.id))
-            .map((vault, idx) => {
-              const progressPercent = Math.min(
-                100,
-                Math.round((vault.totalCollectedMon / vault.targetAmountMon) * 100)
-              )
-              const isCompleted = vault.totalCollectedMon >= vault.targetAmountMon
-              const rotateClass = idx % 2 === 0 ? '-rotate-1' : 'rotate-1'
+          {status === 'loading' &&
+            [0, 1, 2].map((slot) => (
+              <div
+                key={slot}
+                aria-hidden="true"
+                className="h-72 rounded-2xl border-4 border-black bg-white shadow-[6px_6px_0px_0px_#000] animate-pulse"
+              />
+            ))}
+          {visibleVaults
+            .map((vault) => {
+              const percent = progressPercent(vault.totalCollectedMon, vault.targetAmountMon)
+              const isCompleted = percent >= 100
 
               return (
                 <div
                   key={vault.id}
-                  onClick={() => setSelectedVault(vault)}
+                  onClick={() => setSelectedVaultId(vault.id)}
                   className="group relative rounded-2xl border-4 border-black bg-white p-6 shadow-[6px_6px_0px_0px_#000] hover:shadow-[10px_10px_0px_0px_#000] hover:translate-x-[-3px] hover:translate-y-[-3px] transition-all cursor-pointer rotate-0 sm:rotate-1"
                 >
                   {/* Hide Card Button (Top-right corner, absolutely positioned) */}
@@ -214,7 +223,7 @@ function App() {
                   {/* Header Tag */}
                   <div className="flex items-center justify-between gap-2 mb-4">
                   <span className="rounded-md border-2 border-black bg-[#CCFF00] px-2.5 py-1 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_#000]">
-                    Vault #{vault.numericId || vault.id}
+                    Vault #{vault.numericId}
                   </span>
                   {vault.isClaimed ? (
                     <span className="rounded-md border-2 border-black bg-emerald-300 px-2.5 py-1 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_#000]">
@@ -249,7 +258,7 @@ function App() {
                   <div className="h-4 w-full rounded-md border-3 border-black bg-slate-100 p-0.5 shadow-[2px_2px_0px_0px_#000]">
                     <div
                       className="h-full rounded bg-[#CCFF00] border-r-2 border-black transition-all duration-500"
-                      style={{ width: `${progressPercent}%` }}
+                      style={{ width: `${percent}%` }}
                     />
                   </div>
 
@@ -260,7 +269,7 @@ function App() {
                     </span>
                     <span className="flex items-center gap-1 bg-[#00E5FF] px-1.5 border border-black">
                       <Flame className="h-3.5 w-3.5 text-black" />
-                      +0.5% APY Staked
+                      +0.5% / 30 Days
                     </span>
                   </div>
                 </div>
@@ -269,7 +278,7 @@ function App() {
                 <div className="pt-2 border-t-3 border-black flex items-center justify-between">
                   <span className="text-xs font-black uppercase text-black flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
-                    {vault.isClaimed ? 'Gift Unlocked' : 'Time-Locked'}
+                    {vault.isClaimed ? 'Gift Unlocked' : vault.birthdayTimestamp <= Date.now() ? 'Ready to Release' : 'Time-Locked'}
                   </span>
                   <button className="flex items-center gap-1 rounded-md border-2 border-black bg-black px-3 py-1.5 text-xs font-black uppercase text-[#CCFF00] shadow-[2px_2px_0px_0px_#000] group-hover:bg-[#CCFF00] group-hover:text-black transition-colors">
                     <span>View Vault</span>
@@ -293,7 +302,7 @@ function App() {
             READY TO SEE GIFT POOLS <span className="bg-[#CCFF00] text-black px-2 border-4 border-black shadow-[4px_4px_0px_0px_#000] inline-block">DIFFERENTLY?</span>
           </h2>
           <p className="text-lg font-bold text-slate-100 max-w-xl mx-auto">
-            Zero gas friction with Privy Social Login, sub-second 0.3s Monad block time, and 100% on-chain SVG booklet NFTs.
+            Social login with Privy, 0.3s Monad block time, and 100% on-chain SVG booklet NFTs.
           </p>
           <div className="pt-4">
             <button
@@ -312,17 +321,18 @@ function App() {
         <CreateVaultModal
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
-          onCreate={handleCreateVault}
+          onCreate={createVault}
         />
       )}
 
       {selectedVault && (
         <VaultDetailsModal
           vault={selectedVault}
-          isOpen={!!selectedVault}
-          onClose={() => setSelectedVault(null)}
-          onContribute={handleContribute}
-          onReleaseGift={handleReleaseGift}
+          demoModeEnabled={demoModeEnabled}
+          walletAddress={walletAddress}
+          onClose={() => setSelectedVaultId(null)}
+          onContribute={contribute}
+          onReleaseGift={releaseGift}
         />
       )}
 

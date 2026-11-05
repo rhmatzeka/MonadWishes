@@ -47,26 +47,26 @@ When friend groups organize birthday gift pools 1 month prior to the event, conv
 
 ### Core Architecture & Modules
 - **Smart Contract Layer (`contracts/src/`)**:
-  - `MonadBirthdayVault.sol`: Address `0x5f2394E6Bc3Dd842831C66253d4433f4F72B4E7B`. Manages vault lifecycle, greeting storage, Monad `0x1000` precompile delegation, and yield calculation (`calculateYieldBonus`).
-  - `MonadBirthdayNFT.sol`: Address `0xa74f97D26a3783C94c8a925C3c2598cA80C8C579`. Dynamic base64-encoded on-chain SVG booklet artwork.
+  - `MonadBirthdayVault.sol`: Address `0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764`. Manages vault lifecycle, greeting storage, Monad `0x1000` precompile delegation, and yield calculation (`calculateYieldBonus`).
+  - `MonadBirthdayNFT.sol`: Address `0x80994d808075041964605fCA72E7858b861c2c01`. Dynamic base64-encoded on-chain SVG booklet artwork.
 - **Indexer Layer (`indexer/`)**:
   - Envio HyperIndex indexing `VaultCreated`, `ContributionReceived`, and `GiftClaimed` events on Monad Testnet (`10143`).
   - Schema entities: `VaultEntity`, `ContributionEntity`, `GiftClaimEntity`.
 - **Frontend Layer (`frontend/src/`)**:
   - React + TanStack Router + Tailwind CSS.
-  - Wagmi / Viem configured for Monad Testnet (`Chain ID 10143`, RPC `https://testnet-rpc.monad.xyz`).
+  - Viem configured for Monad Testnet (`Chain ID 10143`, RPC `https://testnet-rpc.monad.xyz`).
   - `services/indexer.ts`: Service querying Envio GraphQL with automatic fallback to viem `publicClient.readContract`.
-  - `components/NetworkSwitchBanner.tsx`: Warning banner prompting network switch to Monad Testnet.
+  - `components/PrivyBridge.tsx`: Lazy-loaded Privy layer. It loads on login or for a returning session, switches the wallet to Monad Testnet and refuses to send on any other chain.
   - `components/VaultDetailsModal.tsx`: Includes Live Sub-Second Yield Ticker component and Interactive Memory NFT Booklet modal.
   - Privy SDK for EIP-7702 Social Login & Account Abstraction Gasless Paymaster.
-  - Pyth Network SDK / Hermes API for MON/USD pricing feed.
+  - Pyth contract on Monad Testnet for the MON/USD price (the public Hermes API now needs a key).
 
 ### Key Technical & Architectural Decisions (ADR Summary)
-- **ADR-001 (Envio Indexer & Viem Fallback)**: Primary data source is Envio GraphQL (`http://localhost:8080/v1/graphql`). If unreachable, frontend falls back seamlessly to viem `readContract` calls.
+- **ADR-001 (Optional Indexer, Multicall by Default)**: Envio GraphQL is used only when `VITE_INDEXER_GRAPHQL_URL` is set. Otherwise, or for 5 minutes after a failure, the frontend reads all vaults with viem `multicall`.
 - **ADR-002 (Protocol Reserve Yield Pool & Ticker)**: Vault contract includes `receive() external payable` for reserve funding. UI calculates sub-second live yield growth per second.
 - **ADR-003 (Network Auto-Switching UI)**: Prompt user when connected wallet chainId != `10143` to avoid `ContractFunctionExecutionError`.
 - **ADR-004 (Memory NFT Viewer & Dual Claim Mode)**: Render SVG booklet inline via `tokenURI(tokenId)` and provide both Real Time-Lock & Demo Time Travel release triggers.
-- **ADR-005 (Indexer Config Sync)**: `indexer/config.yaml` synced to Vault contract `0x5f2394E6Bc3Dd842831C66253d4433f4F72B4E7B`.
+- **ADR-005 (Indexer Config Sync)**: `indexer/config.yaml` synced to Vault contract `0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764`.
 - **ADR-006 (Sub-Second Live Yield Counter)**: Live ticker animation updated every 1000ms in frontend UI.
 - **ADR-007 (Deep Unified MonadVaultClient Module)**: Encapsulate reads, writes, dual-source fallback, and automated refetching into a unified `useVaultClient` hook interface.
 
