@@ -7,8 +7,10 @@ import type { VaultData, GreetingItem } from '../components/VaultDetailsModal'
 const INDEXER_GRAPHQL_URL: string | undefined = import.meta.env.VITE_INDEXER_GRAPHQL_URL
 const INDEXER_TIMEOUT_MS = 3_000
 const INDEXER_RETRY_MS = 5 * 60_000
+const INDEXER_FIRST_TRY_DELAY_MS = 15_000
 
-let indexerRetryAt = 0
+// The first load always uses RPC, so a dead indexer can never hold up the vault list.
+let indexerRetryAt = Date.now() + INDEXER_FIRST_TRY_DELAY_MS
 
 const READ_VAULT_ABI = [
   {

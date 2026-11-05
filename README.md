@@ -1,7 +1,7 @@
 # 🎉 MonadWishes — Social Birthday Gift Vault & Yield Pool on Monad Blockchain
 
 [![Monad Testnet](https://img.shields.io/badge/Monad-Testnet_10143-836EF9?style=for-the-badge&logo=ethereum&logoColor=white)](https://testnet.monadexplorer.com)
-[![Vercel Deployment](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://monad-wishes-xi.vercel.app/)
+[![Vercel Deployment](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://monadwishes.rahmateka.my.id/)
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.24-363636?style=for-the-badge&logo=solidity&logoColor=white)](https://soliditylang.org/)
 [![Envio Indexer](https://img.shields.io/badge/Envio-HyperIndex_GraphQL-FFD600?style=for-the-badge)](https://envio.dev)
 [![Pyth Network](https://img.shields.io/badge/Pyth-Live_MON%2FUSD-00E5FF?style=for-the-badge)](https://pyth.network)
@@ -14,7 +14,7 @@
 
 ## 🌐 Live Application & Links
 
-- **🚀 Live Web App**: [https://monad-wishes-xi.vercel.app/](https://monad-wishes-xi.vercel.app/)
+- **🚀 Live Web App**: [https://monadwishes.rahmateka.my.id/](https://monadwishes.rahmateka.my.id/)
 - **📜 Vault Smart Contract (Monad Testnet)**: [`0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764`](https://testnet.monadexplorer.com/address/0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764)
 - **🎨 NFT Booklet Contract (Monad Testnet)**: [`0x80994d808075041964605fCA72E7858b861c2c01`](https://testnet.monadexplorer.com/address/0x80994d808075041964605fCA72E7858b861c2c01)
 

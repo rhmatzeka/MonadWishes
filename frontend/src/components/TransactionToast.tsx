@@ -1,4 +1,4 @@
-import { ExternalLink, CheckCircle2, Loader2, AlertCircle, X } from 'lucide-react'
+import { ArrowSquareOutIcon, CheckCircleIcon, SpinnerIcon, WarningCircleIcon, XIcon } from '@phosphor-icons/react'
 
 export interface TxToastState {
   isOpen: boolean
@@ -24,16 +24,17 @@ export default function TransactionToast({ toast, onClose }: TransactionToastPro
       <div className="relative rounded-xl border-4 border-black bg-[#FFFDF5] p-4 shadow-[6px_6px_0px_0px_#000] text-black">
         <button
           onClick={onClose}
+          aria-label="Close"
           className="absolute top-3 right-3 rounded-md border-2 border-black bg-[#FF5252] p-1 text-black hover:bg-[#FF0000] hover:text-white shadow-[2px_2px_0px_0px_#000] transition-colors"
         >
-          <X className="h-4 w-4 stroke-[3]" />
+          <XIcon weight="bold" className="h-4 w-4" />
         </button>
 
         {/* Submitting / Mining */}
         {(toast.status === 'submitting' || toast.status === 'mining') && (
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg border-2 border-black bg-[#00E5FF] text-black shrink-0 shadow-[2px_2px_0px_0px_#000]">
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <SpinnerIcon weight="bold" className="h-5 w-5 animate-spin" />
             </div>
             <div>
               <h4 className="text-sm font-black uppercase text-black">
@@ -50,7 +51,7 @@ export default function TransactionToast({ toast, onClose }: TransactionToastPro
                   className="mt-2 inline-flex items-center gap-1 text-[11px] font-black uppercase text-black bg-[#00E5FF] px-2 py-0.5 border border-black shadow-[1px_1px_0px_0px_#000] hover:underline"
                 >
                   <span>Tx: {truncatedHash}</span>
-                  <ExternalLink className="h-3 w-3" />
+                  <ArrowSquareOutIcon weight="bold" className="h-3 w-3" />
                 </a>
               )}
             </div>
@@ -61,7 +62,7 @@ export default function TransactionToast({ toast, onClose }: TransactionToastPro
         {toast.status === 'success' && (
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg border-2 border-black bg-[#CCFF00] text-black shrink-0 shadow-[2px_2px_0px_0px_#000]">
-              <CheckCircle2 className="h-5 w-5 stroke-[3]" />
+              <CheckCircleIcon weight="bold" className="h-5 w-5" />
             </div>
             <div>
               <h4 className="text-sm font-black uppercase text-black">
@@ -78,7 +79,7 @@ export default function TransactionToast({ toast, onClose }: TransactionToastPro
                   className="mt-2 inline-flex items-center gap-1.5 rounded-lg border-2 border-black bg-[#CCFF00] px-2.5 py-1 text-[11px] font-black uppercase text-black shadow-[2px_2px_0px_0px_#000] hover:bg-[#00E5FF] transition-all"
                 >
                   <span>View on Explorer ({truncatedHash})</span>
-                  <ExternalLink className="h-3 w-3" />
+                  <ArrowSquareOutIcon weight="bold" className="h-3 w-3" />
                 </a>
               )}
             </div>
@@ -89,7 +90,7 @@ export default function TransactionToast({ toast, onClose }: TransactionToastPro
         {toast.status === 'error' && (
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg border-2 border-black bg-[#FF5252] text-white shrink-0 shadow-[2px_2px_0px_0px_#000]">
-              <AlertCircle className="h-5 w-5" />
+              <WarningCircleIcon weight="bold" className="h-5 w-5" />
             </div>
             <div>
               <h4 className="text-sm font-black uppercase text-black">Transaction Failed</h4>

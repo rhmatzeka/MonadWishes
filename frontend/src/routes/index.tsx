@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Gift, Plus, Clock, Users, Flame, ChevronRight, ArrowRight } from 'lucide-react'
+import { ArrowRightIcon, CaretRightIcon, ClockIcon, FlameIcon, GiftIcon, PlusIcon, SparkleIcon, UsersIcon, XIcon } from '@phosphor-icons/react'
 import CreateVaultModal from '../components/CreateVaultModal'
 import VaultDetailsModal from '../components/VaultDetailsModal'
 import TransactionToast from '../components/TransactionToast'
@@ -81,7 +81,7 @@ function App() {
               onClick={() => setIsCreateOpen(true)}
               className="flex items-center justify-center gap-2 rounded-lg border-4 border-black bg-[#CCFF00] px-6 py-3.5 text-base font-black uppercase text-black shadow-[5px_5px_0px_0px_#000] hover:bg-[#FFD600] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all cursor-pointer w-full sm:w-auto"
             >
-              <Plus className="h-5 w-5 stroke-[3]" />
+              <PlusIcon weight="bold" className="h-5 w-5" />
               <span>Create Birthday Vault</span>
             </button>
             <a
@@ -89,7 +89,7 @@ function App() {
               className="flex items-center justify-center gap-2 rounded-lg border-4 border-black bg-white px-6 py-3.5 text-base font-black uppercase text-black shadow-[5px_5px_0px_0px_#000] hover:bg-[#00E5FF] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all w-full sm:w-auto text-center"
             >
               <span>Explore All Vaults</span>
-              <ArrowRight className="h-5 w-5 stroke-[3]" />
+              <ArrowRightIcon weight="bold" className="h-5 w-5" />
             </a>
           </div>
 
@@ -106,29 +106,29 @@ function App() {
 
           {/* Scrolling Content Track (Duplicated for Seamless Loop) */}
           <div className="animate-marquee whitespace-nowrap flex items-center gap-8 font-black uppercase text-xs sm:text-sm tracking-wider text-slate-200 pl-6">
-            <span className="flex items-center gap-2 text-[#CCFF00]">✦ MONAD TESTNET 0.3s BLOCK TIME</span>
+            <span className="flex items-center gap-2 text-[#CCFF00]"><SparkleIcon weight="fill" /> MONAD TESTNET 0.3s BLOCK TIME</span>
             <span className="text-slate-500">•</span>
             <span>PRIVY SOCIAL LOGIN</span>
             <span className="text-slate-500">•</span>
-            <span className="text-[#00E5FF]">✦ YIELD BONUS 0.5% / 30 DAYS</span>
+            <span className="flex items-center gap-2 text-[#00E5FF]"><SparkleIcon weight="fill" /> YIELD BONUS 0.5% / 30 DAYS</span>
             <span className="text-slate-500">•</span>
             <span>PYTH LIVE MON/USD PRICING</span>
             <span className="text-slate-500">•</span>
-            <span className="text-amber-300">✦ 100% ON-CHAIN SVG NFT BOOKLET</span>
+            <span className="flex items-center gap-2 text-amber-300"><SparkleIcon weight="fill" /> 100% ON-CHAIN SVG NFT BOOKLET</span>
             <span className="text-slate-500">•</span>
             <span>ENVIO GRAPHQL EVENT INDEXER</span>
             <span className="text-slate-500">•</span>
 
             {/* Duplicate for seamless infinite loop */}
-            <span className="flex items-center gap-2 text-[#CCFF00]">✦ MONAD TESTNET 0.3s BLOCK TIME</span>
+            <span className="flex items-center gap-2 text-[#CCFF00]"><SparkleIcon weight="fill" /> MONAD TESTNET 0.3s BLOCK TIME</span>
             <span className="text-slate-500">•</span>
             <span>PRIVY SOCIAL LOGIN</span>
             <span className="text-slate-500">•</span>
-            <span className="text-[#00E5FF]">✦ YIELD BONUS 0.5% / 30 DAYS</span>
+            <span className="flex items-center gap-2 text-[#00E5FF]"><SparkleIcon weight="fill" /> YIELD BONUS 0.5% / 30 DAYS</span>
             <span className="text-slate-500">•</span>
             <span>PYTH LIVE MON/USD PRICING</span>
             <span className="text-slate-500">•</span>
-            <span className="text-amber-300">✦ 100% ON-CHAIN SVG NFT BOOKLET</span>
+            <span className="flex items-center gap-2 text-amber-300"><SparkleIcon weight="fill" /> 100% ON-CHAIN SVG NFT BOOKLET</span>
             <span className="text-slate-500">•</span>
             <span>ENVIO GRAPHQL EVENT INDEXER</span>
             <span className="text-slate-500">•</span>
@@ -163,7 +163,7 @@ function App() {
               onClick={() => setIsCreateOpen(true)}
               className="flex items-center gap-2 rounded-md border-3 border-black bg-[#00E5FF] px-4 py-2 text-sm font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:bg-[#CCFF00] transition-all cursor-pointer"
             >
-              <Plus className="h-4 w-4 stroke-[3]" />
+              <PlusIcon weight="bold" className="h-4 w-4" />
               <span>New Pool</span>
             </button>
           </div>
@@ -216,8 +216,9 @@ function App() {
                     }}
                     className="absolute -top-3.5 -right-3.5 h-8 w-8 rounded-full border-3 border-black bg-[#FF5252] text-white hover:bg-black hover:text-[#CCFF00] flex items-center justify-center font-black shadow-[2px_2px_0px_0px_#000] transition-all z-20 cursor-pointer"
                     title="Hide this vault card from list"
+                    aria-label="Hide this vault card"
                   >
-                    ×
+                    <XIcon weight="bold" className="h-4 w-4" />
                   </button>
 
                   {/* Header Tag */}
@@ -264,11 +265,11 @@ function App() {
 
                   <div className="flex items-center justify-between text-xs font-black uppercase text-black pt-1">
                     <span className="flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5" />
+                      <UsersIcon weight="bold" className="h-3.5 w-3.5" />
                       {vault.greetings.length} Contributors
                     </span>
                     <span className="flex items-center gap-1 bg-[#00E5FF] px-1.5 border border-black">
-                      <Flame className="h-3.5 w-3.5 text-black" />
+                      <FlameIcon weight="bold" className="h-3.5 w-3.5 text-black" />
                       +0.5% / 30 Days
                     </span>
                   </div>
@@ -277,12 +278,12 @@ function App() {
                 {/* Action Footer */}
                 <div className="pt-2 border-t-3 border-black flex items-center justify-between">
                   <span className="text-xs font-black uppercase text-black flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
+                    <ClockIcon weight="bold" className="h-3.5 w-3.5" />
                     {vault.isClaimed ? 'Gift Unlocked' : vault.birthdayTimestamp <= Date.now() ? 'Ready to Release' : 'Time-Locked'}
                   </span>
                   <button className="flex items-center gap-1 rounded-md border-2 border-black bg-black px-3 py-1.5 text-xs font-black uppercase text-[#CCFF00] shadow-[2px_2px_0px_0px_#000] group-hover:bg-[#CCFF00] group-hover:text-black transition-colors">
                     <span>View Vault</span>
-                    <ChevronRight className="h-4 w-4 stroke-[3]" />
+                    <CaretRightIcon weight="bold" className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -309,8 +310,9 @@ function App() {
               onClick={() => setIsCreateOpen(true)}
               className="inline-flex items-center gap-3 rounded-xl border-4 border-black bg-[#CCFF00] px-8 py-4 text-xl font-black uppercase text-black shadow-[6px_6px_0px_0px_#000] hover:translate-x-[-3px] hover:translate-y-[-3px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all cursor-pointer"
             >
-              <Gift className="h-6 w-6 stroke-[3]" />
-              <span>Create Your Vault Now ➔</span>
+              <GiftIcon weight="bold" className="h-6 w-6" />
+              <span>Create Your Vault Now</span>
+              <ArrowRightIcon weight="bold" className="h-6 w-6" />
             </button>
           </div>
         </div>

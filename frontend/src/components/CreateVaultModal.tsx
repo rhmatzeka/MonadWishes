@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Gift, Sparkles, Calendar, DollarSign, User, ShieldCheck } from 'lucide-react'
+import { CalendarBlankIcon, CurrencyDollarIcon, GiftIcon, ShieldCheckIcon, SparkleIcon, UserIcon, XIcon } from '@phosphor-icons/react'
 import { isAddress } from 'viem'
 import { usePythPrice } from '../hooks/usePythPrice'
 import { formatUsd, recipientNameError } from '../lib/vault'
@@ -56,7 +56,7 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
         <div className="flex items-center justify-between border-b-4 border-black pb-3 mb-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg bg-[#CCFF00] border-3 border-black shadow-[2px_2px_0px_0px_#000] sm:shadow-[3px_3px_0px_0px_#000]">
-              <Gift className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
+              <GiftIcon weight="bold" className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
             </div>
             <div>
               <span className="bg-[#FFD600] px-1.5 py-0.5 border border-black font-black uppercase text-[9px] sm:text-[10px] shadow-[1px_1px_0px_0px_#000]">
@@ -69,16 +69,17 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="rounded-lg border-2 border-black bg-[#FF5252] p-1.5 sm:p-2 text-black hover:bg-[#FF0000] hover:text-white shadow-[2px_2px_0px_0px_#000] transition-colors"
           >
-            <X className="h-4.5 w-4.5 sm:h-5 sm:w-5 stroke-[3]" />
+            <XIcon weight="bold" className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
           </button>
         </div>
 
         {/* Live Pyth Ticker Badge */}
         <div className="mb-4 flex items-center justify-between rounded-lg border-3 border-black bg-[#00E5FF] px-3 py-2 text-[10px] sm:text-xs text-black font-black uppercase shadow-[2px_2px_0px_0px_#000] sm:shadow-[3px_3px_0px_0px_#000]">
           <div className="flex items-center gap-1.5 min-w-0">
-            <Sparkles className="h-3.5 w-3.5 shrink-0 animate-spin text-black" style={{ animationDuration: '4s' }} />
+            <SparkleIcon weight="bold" className="h-3.5 w-3.5 shrink-0 animate-spin text-black" style={{ animationDuration: '4s' }} />
             <span className="truncate">Pyth Oracle Price</span>
           </div>
           <span className="bg-white px-1.5 py-0.5 border border-black shrink-0">1 MON = {monPriceFormatted}{priceAge ? ` (${priceAge} ago)` : ''}</span>
@@ -88,7 +89,7 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
           {/* Recipient Name */}
           <div>
             <label className="block text-[10px] sm:text-xs font-black uppercase text-black mb-1 flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5 text-black" />
+              <UserIcon weight="bold" className="h-3.5 w-3.5 text-black" />
               Recipient Name
             </label>
             <input
@@ -105,7 +106,7 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
           {/* Recipient Wallet Address */}
           <div>
             <label className="block text-[10px] sm:text-xs font-black uppercase text-black mb-1 flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-black" />
+              <ShieldCheckIcon weight="bold" className="h-3.5 w-3.5 text-black" />
               Recipient Wallet or Monad Address
             </label>
             <input
@@ -122,7 +123,7 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
           <div className="grid grid-cols-2 gap-3.5">
             <div>
               <label className="block text-[10px] sm:text-xs font-black uppercase text-black mb-1 flex items-center gap-1.5">
-                <DollarSign className="h-3.5 w-3.5 text-black" />
+                <CurrencyDollarIcon weight="bold" className="h-3.5 w-3.5 text-black" />
                 Target Pool (MON)
               </label>
               <input
@@ -142,7 +143,7 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
             {/* Duration Days */}
             <div>
               <label className="block text-[10px] sm:text-xs font-black uppercase text-black mb-1 flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-black" />
+                <CalendarBlankIcon weight="bold" className="h-3.5 w-3.5 text-black" />
                 Lock Duration
               </label>
               <select
@@ -163,7 +164,7 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
 
           {/* Staking Yield Info Banner */}
           <div className="rounded-lg bg-[#CCFF00] p-2.5 text-[10px] sm:text-xs text-black border-3 border-black shadow-[2px_2px_0px_0px_#000] sm:shadow-[3px_3px_0px_0px_#000]">
-            <p className="font-black uppercase">✨ Yield Bonus</p>
+            <p className="font-black uppercase flex items-center gap-1.5"><SparkleIcon weight="fill" className="h-3.5 w-3.5" /> Yield Bonus</p>
             <p className="text-[10px] sm:text-[11px] font-bold text-black mt-0.5 leading-snug">
               The vault adds up to 0.5% per 30 days at release, paid from the protocol reserve while it lasts.
             </p>
@@ -188,7 +189,7 @@ export default function CreateVaultModal({ isOpen, onClose, onCreate }: CreateVa
               type="submit"
               className="flex items-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-5 py-2 text-xs sm:text-sm font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all"
             >
-              <Gift className="h-4 w-4 stroke-[3]" />
+              <GiftIcon weight="bold" className="h-4 w-4" />
               <span>Create Vault</span>
             </button>
           </div>

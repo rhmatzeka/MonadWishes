@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Gift, Sparkles, Clock, Send, Trophy, CheckCircle2, PlayCircle, Heart } from 'lucide-react'
+import { CheckCircleIcon, ClockIcon, GiftIcon, HeartIcon, PaperPlaneTiltIcon, PlayCircleIcon, SparkleIcon, TrophyIcon, XIcon } from '@phosphor-icons/react'
 import { usePythPrice } from '../hooks/usePythPrice'
 import { fetchBookletImage } from '../services/indexer'
 import { MAX_MESSAGE_LENGTH, accruedYieldMon, formatCountdown, formatUsd, progressPercent } from '../lib/vault'
@@ -117,13 +117,13 @@ export default function VaultDetailsModal({
           aria-label="Close"
           className="absolute right-6 top-6 rounded-lg border-2 border-black bg-[#FF5252] p-2 text-black hover:bg-[#FF0000] hover:text-white shadow-[2px_2px_0px_0px_#000] transition-colors"
         >
-          <X className="h-5 w-5 stroke-[3]" />
+          <XIcon weight="bold" className="h-5 w-5" />
         </button>
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 sm:gap-4 mb-5 pr-8">
           <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-lg bg-[#CCFF00] border-3 border-black shadow-[2px_2px_0px_0px_#000] sm:shadow-[3px_3px_0px_0px_#000] shrink-0">
-            <Gift className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
+            <GiftIcon weight="bold" className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
           </div>
           <div className="min-w-0">
             <div className="flex flex-col gap-1.5">
@@ -133,13 +133,13 @@ export default function VaultDetailsModal({
               {vault.isClaimed && (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-md border-2 border-black bg-emerald-300 px-2 py-0.5 text-[9px] sm:text-xs font-black uppercase text-black shadow-[1.5px_1.5px_0px_0px_#000] flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" /> Claimed
+                    <CheckCircleIcon weight="bold" className="h-3 w-3" /> Claimed
                   </span>
                   <button
                     onClick={() => setShowNftModal(true)}
                     className="rounded-md border-2 border-black bg-[#00E5FF] px-2 py-0.5 text-[9px] sm:text-xs font-black uppercase text-black hover:bg-[#CCFF00] shadow-[1.5px_1.5px_0px_0px_#000] transition-all flex items-center gap-1 cursor-pointer"
                   >
-                    <Trophy className="h-3 w-3" /> NFT Booklet
+                    <TrophyIcon weight="bold" className="h-3 w-3" /> NFT Booklet
                   </button>
                 </div>
               )}
@@ -174,7 +174,7 @@ export default function VaultDetailsModal({
           </div>
           <div className="bg-[#FFD600] p-2.5 border-2 border-black shadow-[2px_2px_0px_0px_#000] rounded-lg">
             <span className="block text-[10px] font-black uppercase text-black flex items-center justify-center gap-1">
-              <Sparkles className="h-3 w-3" /> Est. Yield Bonus
+              <SparkleIcon weight="bold" className="h-3 w-3" /> Est. Yield Bonus
             </span>
             <span className="text-base font-black text-black">+{yieldMon.toFixed(8)} MON</span>
             <span className="block text-[10px] font-black text-black mt-0.5">0.5% / 30 days</span>
@@ -192,7 +192,7 @@ export default function VaultDetailsModal({
           <div className="mb-6 rounded-xl border-3 border-black bg-white p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-[4px_4px_0px_0px_#000]">
             <div className="text-left w-full md:w-auto">
               <span className="text-xs font-black uppercase text-black flex items-center gap-1.5">
-                <Clock className="h-4 w-4 shrink-0" />
+                <ClockIcon weight="bold" className="h-4 w-4 shrink-0" />
                 {isUnlocked ? 'Birthday Reached' : `Unlocks in ${formatCountdown(vault.birthdayTimestamp - now)}`}
               </span>
               <p className="text-[11px] font-bold text-black mt-0.5 leading-snug">
@@ -209,7 +209,7 @@ export default function VaultDetailsModal({
                 disabled={isBusy}
                 className="shrink-0 flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer w-full md:w-auto"
               >
-                <Gift className="h-4 w-4" />
+                <GiftIcon weight="bold" className="h-4 w-4" />
                 <span>Release Gift</span>
               </button>
             )}
@@ -221,7 +221,7 @@ export default function VaultDetailsModal({
           <div className="mb-6 rounded-xl border-3 border-black bg-[#FFD600] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-[4px_4px_0px_0px_#000]">
             <div className="text-left w-full md:w-auto">
               <span className="text-xs font-black uppercase text-black flex items-center gap-1.5">
-                <PlayCircle className="h-4 w-4 shrink-0" /> Hackathon Demo Mode
+                <PlayCircleIcon weight="bold" className="h-4 w-4 shrink-0" /> Hackathon Demo Mode
               </span>
               <p className="text-[11px] font-bold text-black mt-0.5 leading-snug">
                 Skip the time-lock and pay out now, with the on-chain SVG NFT.
@@ -232,7 +232,7 @@ export default function VaultDetailsModal({
               disabled={isBusy || vault.totalCollectedMon === 0}
               className="shrink-0 flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer w-full md:w-auto"
             >
-              <Sparkles className="h-4 w-4 fill-black" />
+              <SparkleIcon weight="fill" className="h-4 w-4" />
               <span>Time Travel Release</span>
             </button>
           </div>
@@ -242,7 +242,7 @@ export default function VaultDetailsModal({
         {!vault.isClaimed && !isUnlocked && (
           <form onSubmit={handleContributeSubmit} className="mb-6 rounded-xl border-3 border-black bg-white p-4 shadow-[4px_4px_0px_0px_#000]">
             <h3 className="text-sm font-black uppercase text-black mb-3 flex items-center gap-2">
-              <Heart className="h-4 w-4 text-pink-500 fill-pink-500" />
+              <HeartIcon weight="fill" className="h-4 w-4 text-pink-500" />
               Send Micro-Contribution & Birthday Wish
             </h3>
             
@@ -280,7 +280,7 @@ export default function VaultDetailsModal({
                 disabled={isBusy}
                 className="flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer w-full xs:w-auto"
               >
-                <Send className="h-4 w-4 stroke-[3]" />
+                <PaperPlaneTiltIcon weight="bold" className="h-4 w-4" />
                 <span>Send Wish</span>
               </button>
             </div>
@@ -290,7 +290,7 @@ export default function VaultDetailsModal({
         {/* Live On-Chain Greetings Feed */}
         <div>
           <h3 className="text-xs font-black uppercase tracking-wider text-black mb-3 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-black" />
+            <ClockIcon weight="bold" className="h-4 w-4 text-black" />
             On-Chain Greetings Feed ({vault.greetings.length})
           </h3>
           <div className="max-h-44 space-y-2 overflow-y-auto pr-1">
@@ -332,10 +332,10 @@ export default function VaultDetailsModal({
               aria-label="Close"
               className="absolute right-4 top-4 rounded-lg border-2 border-black bg-[#FF5252] p-1.5 text-black hover:bg-[#FF0000] hover:text-white transition-colors"
             >
-              <X className="h-5 w-5 stroke-[3]" />
+              <XIcon weight="bold" className="h-5 w-5" />
             </button>
 
-            <Trophy className="h-10 w-10 text-black mx-auto mb-2" />
+            <TrophyIcon weight="bold" className="h-10 w-10 text-black mx-auto mb-2" />
             <h3 className="text-2xl font-black uppercase text-black mb-1">Gift Vault Unlocked!</h3>
             <p className="text-xs font-bold text-black mb-4">
               On-chain SVG NFT Booklet #{vault.nftTokenId} minted to {vault.recipientName}
