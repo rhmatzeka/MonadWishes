@@ -56,7 +56,8 @@ contract MonadBirthdayNFT is ERC721, Ownable {
             unlockTimestamp: unlockTimestamp
         });
 
-        _safeMint(recipient, newTokenId);
+        // _mint, not _safeMint: a contract wallet without onERC721Received must not block the gift payout.
+        _mint(recipient, newTokenId);
 
         emit NFTMinted(newTokenId, recipient, recipientName, totalCollected);
         return newTokenId;
@@ -67,9 +68,7 @@ contract MonadBirthdayNFT is ERC721, Ownable {
 
         BookletData memory data = bookletData[tokenId];
 
-        string memory formattedAmount = string(
-            abi.encodePacked((data.totalCollected / 1e18).toString(), ".", ((data.totalCollected % 1e18) / 1e16).toString())
-        );
+        string memory formattedAmount = formatMon(data.totalCollected);
 
         string memory svg = generateSVG(data.recipientName, formattedAmount, data.contributorCount.toString());
 
@@ -99,6 +98,12 @@ contract MonadBirthdayNFT is ERC721, Ownable {
         );
 
         return string(abi.encodePacked("data:application/json;base64,", json));
+    }
+
+    /// @notice Formats wei as MON with two decimals, e.g. 1.05 ether -> "1.05".
+    function formatMon(uint256 amountWei) public pure returns (string memory) {
+        uint256 cents = (amountWei % 1e18) / 1e16;
+        return string(abi.encodePacked((amountWei / 1e18).toString(), cents < 10 ? ".0" : ".", cents.toString()));
     }
 
     function generateSVG(

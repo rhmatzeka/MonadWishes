@@ -7,7 +7,6 @@ broadcast/
 .env
 .env.local
 *.env
-lib/
 
 # Dependencies (if installed via git submodules or npm)
 # Note: Keep lib/ if storing submodules, but ignore untracked artifacts inside lib
