@@ -128,6 +128,29 @@ contract MonadBirthdayVaultFixesTest is Test {
         assertEq(nft.formatMon(12.345 ether), "12.34");
     }
 
+    // Bug: contribute() called the staking precompile with a bad selector. A failing call burns
+    // 63/64 of the gas it is given, which made eth_estimateGas return ~148M on Monad.
+    function test_ContributeIgnoresFailingPrecompile() public {
+        vm.etch(address(0x1000), hex"fe"); // INVALID: consumes all forwarded gas
+        vm.prank(friend);
+        uint256 a = vault.createVault(alice, "Alice", 30, 1 ether);
+
+        vm.prank(friend);
+        vault.contribute{value: 1 ether, gas: 300_000}(a, "hbd");
+
+        (MonadBirthdayVault.Vault memory v, , ) = vault.getVaultDetails(a);
+        assertEq(v.totalCollected, 1 ether);
+    }
+
+    function test_ContributeNeverCallsPrecompile() public {
+        vm.prank(friend);
+        uint256 a = vault.createVault(alice, "Alice", 30, 1 ether);
+
+        vm.expectCall(address(0x1000), "", 0);
+        vm.prank(friend);
+        vault.contribute{value: 1 ether}(a, "hbd");
+    }
+
     function _contains(string memory hay, string memory needle) internal pure returns (bool) {
         bytes memory h = bytes(hay);
         bytes memory n = bytes(needle);
