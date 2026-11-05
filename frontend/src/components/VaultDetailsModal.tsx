@@ -1,39 +1,45 @@
 import React, { useState, useEffect } from 'react'
 import { X, Gift, Sparkles, Clock, Send, Trophy, CheckCircle2, PlayCircle, Heart } from 'lucide-react'
 import { usePythPrice } from '../hooks/usePythPrice'
+import { fetchBookletImage } from '../services/indexer'
+import { MAX_MESSAGE_LENGTH, accruedYieldMon, formatCountdown, formatUsd, progressPercent } from '../lib/vault'
 
 export interface GreetingItem {
   id: string
   sender: string
   amountMon: number
   message: string
-  timestamp: Date
+  timestamp: number
 }
 
 export interface VaultData {
   id: string
-  numericId?: number
+  numericId: number
   recipientName: string
   recipientAddress: string
   creatorAddress: string
   targetAmountMon: number
   totalCollectedMon: number
   birthdayTimestamp: number
+  createdAt: number
   isClaimed: boolean
+  nftTokenId: number
   greetings: GreetingItem[]
 }
 
 interface VaultDetailsModalProps {
-  isOpen: boolean
-  vault: VaultData | null
+  vault: VaultData
+  demoModeEnabled: boolean
+  walletAddress?: string
   onClose: () => void
-  onContribute: (vaultId: string, amountMon: number, message: string) => void
-  onReleaseGift: (vaultId: string, isDemoMode: boolean) => void
+  onContribute: (vault: VaultData, amountMon: string, message: string) => Promise<boolean>
+  onReleaseGift: (vault: VaultData, isDemoMode: boolean) => Promise<boolean>
 }
 
 export default function VaultDetailsModal({
-  isOpen,
   vault,
+  demoModeEnabled,
+  walletAddress,
   onClose,
   onContribute,
   onReleaseGift,
@@ -43,41 +49,62 @@ export default function VaultDetailsModal({
   const [contributeAmount, setContributeAmount] = useState('1.0')
   const [greetingMsg, setGreetingMsg] = useState('')
   const [showNftModal, setShowNftModal] = useState(false)
-  const [simulatedYieldMon, setSimulatedYieldMon] = useState(0)
+  const [bookletImage, setBookletImage] = useState<string | null>(null)
+  const [bookletFailed, setBookletFailed] = useState(false)
+  const [isBusy, setIsBusy] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    if (!vault) return
-    // Base yield calculation (0.5% monthly prorated) + greetings bonus
-    const baseYield = (vault.totalCollectedMon * 0.005) + (vault.greetings.length * 0.02)
-    setSimulatedYieldMon(baseYield)
-
-    // Sub-second live yield ticker animation (increments slightly every second)
-    const interval = setInterval(() => {
-      setSimulatedYieldMon((prev) => prev + 0.0000012)
-    }, 1000)
-
+    if (vault.isClaimed) return
+    const interval = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(interval)
-  }, [vault])
+  }, [vault.isClaimed])
 
-  if (!isOpen || !vault) return null
+  useEffect(() => {
+    if (!showNftModal || !vault.nftTokenId) return
+    let isCurrent = true
+    setBookletFailed(false)
+    fetchBookletImage(vault.nftTokenId)
+      .then((image) => {
+        if (!isCurrent) return
+        setBookletImage(image)
+        setBookletFailed(!image)
+      })
+      .catch(() => {
+        if (isCurrent) setBookletFailed(true)
+      })
+    return () => {
+      isCurrent = false
+    }
+  }, [showNftModal, vault.nftTokenId])
 
-  const collectedUsd = (vault.totalCollectedMon * monPrice).toFixed(2)
-  const totalPayoutMon = vault.totalCollectedMon + simulatedYieldMon
-  const totalPayoutUsd = (totalPayoutMon * monPrice).toFixed(2)
-  const progressPercent = Math.min(100, Math.round((vault.totalCollectedMon / vault.targetAmountMon) * 100))
+  const isUnlocked = now >= vault.birthdayTimestamp
+  const yieldMon = accruedYieldMon(vault.totalCollectedMon, vault.createdAt, vault.birthdayTimestamp, now)
+  const totalPayoutMon = vault.totalCollectedMon + yieldMon
+  const percent = progressPercent(vault.totalCollectedMon, vault.targetAmountMon)
 
-  const handleContributeSubmit = (e: React.FormEvent) => {
+  const wallet = walletAddress?.toLowerCase()
+  const canDemoRelease =
+    demoModeEnabled &&
+    !isUnlocked &&
+    !vault.isClaimed &&
+    (wallet === vault.creatorAddress.toLowerCase() || wallet === vault.recipientAddress.toLowerCase())
+
+  const handleContributeSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const amt = parseFloat(contributeAmount) || 0
-    if (amt <= 0 || !greetingMsg) return
+    if (!greetingMsg.trim() || isBusy) return
 
-    onContribute(vault.id, amt, greetingMsg)
-    setGreetingMsg('')
+    setIsBusy(true)
+    const sent = await onContribute(vault, contributeAmount, greetingMsg.trim())
+    setIsBusy(false)
+    if (sent) setGreetingMsg('')
   }
 
-  const handleClaim = (isDemoMode: boolean) => {
-    onReleaseGift(vault.id, isDemoMode)
-    setShowNftModal(true)
+  const handleClaim = async (isDemoMode: boolean) => {
+    setIsBusy(true)
+    const released = await onReleaseGift(vault, isDemoMode)
+    setIsBusy(false)
+    if (released) setShowNftModal(true)
   }
 
   return (
@@ -87,6 +114,7 @@ export default function VaultDetailsModal({
         {/* Close Button */}
         <button
           onClick={onClose}
+          aria-label="Close"
           className="absolute right-6 top-6 rounded-lg border-2 border-black bg-[#FF5252] p-2 text-black hover:bg-[#FF0000] hover:text-white shadow-[2px_2px_0px_0px_#000] transition-colors"
         >
           <X className="h-5 w-5 stroke-[3]" />
@@ -126,14 +154,14 @@ export default function VaultDetailsModal({
         <div className="mb-6 rounded-xl border-3 border-black bg-white p-5 shadow-[4px_4px_0px_0px_#000]">
           <div className="flex items-center justify-between text-sm font-black uppercase mb-2">
             <span>Target Gift Pool Progress</span>
-            <span className="bg-[#CCFF00] px-2 border border-black shadow-[1px_1px_0px_0px_#000]">{progressPercent}%</span>
+            <span className="bg-[#CCFF00] px-2 border border-black shadow-[1px_1px_0px_0px_#000]">{percent}%</span>
           </div>
           
           {/* Progress Bar */}
           <div className="h-4 w-full rounded-md border-3 border-black bg-slate-100 p-0.5 shadow-[2px_2px_0px_0px_#000]">
             <div
               className="h-full rounded bg-[#CCFF00] border-r-2 border-black transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
+              style={{ width: `${percent}%` }}
             />
           </div>
 
@@ -142,45 +170,76 @@ export default function VaultDetailsModal({
           <div className="bg-[#FFFDF5] p-2.5 border-2 border-black shadow-[2px_2px_0px_0px_#000] rounded-lg">
             <span className="block text-[10px] font-black uppercase text-slate-700">Collected Principal</span>
             <span className="text-base font-black text-black">{vault.totalCollectedMon.toFixed(2)} MON</span>
-            <span className="block text-[10px] font-bold text-slate-600 mt-0.5">≈ ${collectedUsd}</span>
+            <span className="block text-[10px] font-bold text-slate-600 mt-0.5">≈ {formatUsd(vault.totalCollectedMon, monPrice)}</span>
           </div>
           <div className="bg-[#FFD600] p-2.5 border-2 border-black shadow-[2px_2px_0px_0px_#000] rounded-lg">
             <span className="block text-[10px] font-black uppercase text-black flex items-center justify-center gap-1">
-              <Sparkles className="h-3 w-3" /> Monad Yield
+              <Sparkles className="h-3 w-3" /> Est. Yield Bonus
             </span>
-            <span className="text-base font-black text-black">+{simulatedYieldMon.toFixed(4)} MON</span>
-            <span className="block text-[10px] font-black text-black mt-0.5">0.5% APY Staked</span>
+            <span className="text-base font-black text-black">+{yieldMon.toFixed(8)} MON</span>
+            <span className="block text-[10px] font-black text-black mt-0.5">0.5% / 30 days</span>
           </div>
           <div className="bg-[#00E5FF] p-2.5 border-2 border-black shadow-[2px_2px_0px_0px_#000] rounded-lg">
-            <span className="block text-[10px] font-black uppercase text-black">Total Payout</span>
-            <span className="text-base font-black text-black">{totalPayoutMon.toFixed(2)} MON</span>
-            <span className="block text-[10px] font-black text-black mt-0.5">≈ ${totalPayoutUsd}</span>
+            <span className="block text-[10px] font-black uppercase text-black">Est. Total Payout</span>
+            <span className="text-base font-black text-black">{totalPayoutMon.toFixed(4)} MON</span>
+            <span className="block text-[10px] font-black text-black mt-0.5">≈ {formatUsd(totalPayoutMon, monPrice)}</span>
           </div>
         </div>
         </div>
 
-        {/* Hackathon Demo Time-Travel Banner */}
-        <div className="mb-6 rounded-xl border-3 border-black bg-[#FFD600] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-[4px_4px_0px_0px_#000]">
-          <div className="text-left w-full md:w-auto">
-            <span className="text-xs font-black uppercase text-black flex items-center gap-1.5">
-              <PlayCircle className="h-4 w-4 shrink-0" /> Hackathon Demo Mode
-            </span>
-            <p className="text-[11px] font-bold text-black mt-0.5 leading-snug">
-              Bypass 30-day time-lock to simulate 00:00 instant payout & on-chain SVG NFT.
-            </p>
+        {/* Time-lock status and normal release */}
+        {!vault.isClaimed && (
+          <div className="mb-6 rounded-xl border-3 border-black bg-white p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-[4px_4px_0px_0px_#000]">
+            <div className="text-left w-full md:w-auto">
+              <span className="text-xs font-black uppercase text-black flex items-center gap-1.5">
+                <Clock className="h-4 w-4 shrink-0" />
+                {isUnlocked ? 'Birthday Reached' : `Unlocks in ${formatCountdown(vault.birthdayTimestamp - now)}`}
+              </span>
+              <p className="text-[11px] font-bold text-black mt-0.5 leading-snug">
+                {isUnlocked
+                  ? vault.totalCollectedMon > 0
+                    ? 'Anyone can release the pool. The MON always goes to the recipient.'
+                    : 'This vault closed without any contributions.'
+                  : `Unlock date: ${new Date(vault.birthdayTimestamp).toLocaleDateString()}`}
+              </p>
+            </div>
+            {isUnlocked && vault.totalCollectedMon > 0 && (
+              <button
+                onClick={() => handleClaim(false)}
+                disabled={isBusy}
+                className="shrink-0 flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer w-full md:w-auto"
+              >
+                <Gift className="h-4 w-4" />
+                <span>Release Gift</span>
+              </button>
+            )}
           </div>
-          <button
-            onClick={() => handleClaim(true)}
-            disabled={vault.isClaimed || vault.totalCollectedMon === 0}
-            className="shrink-0 flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer w-full md:w-auto"
-          >
-            <Sparkles className="h-4 w-4 fill-black" />
-            <span>Time Travel Release</span>
-          </button>
-        </div>
+        )}
+
+        {/* Hackathon Demo Release: only the creator or recipient passes the contract check */}
+        {canDemoRelease && (
+          <div className="mb-6 rounded-xl border-3 border-black bg-[#FFD600] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-[4px_4px_0px_0px_#000]">
+            <div className="text-left w-full md:w-auto">
+              <span className="text-xs font-black uppercase text-black flex items-center gap-1.5">
+                <PlayCircle className="h-4 w-4 shrink-0" /> Hackathon Demo Mode
+              </span>
+              <p className="text-[11px] font-bold text-black mt-0.5 leading-snug">
+                Skip the time-lock and pay out now, with the on-chain SVG NFT.
+              </p>
+            </div>
+            <button
+              onClick={() => handleClaim(true)}
+              disabled={isBusy || vault.totalCollectedMon === 0}
+              className="shrink-0 flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer w-full md:w-auto"
+            >
+              <Sparkles className="h-4 w-4 fill-black" />
+              <span>Time Travel Release</span>
+            </button>
+          </div>
+        )}
 
         {/* Contribution Form */}
-        {!vault.isClaimed && (
+        {!vault.isClaimed && !isUnlocked && (
           <form onSubmit={handleContributeSubmit} className="mb-6 rounded-xl border-3 border-black bg-white p-4 shadow-[4px_4px_0px_0px_#000]">
             <h3 className="text-sm font-black uppercase text-black mb-3 flex items-center gap-2">
               <Heart className="h-4 w-4 text-pink-500 fill-pink-500" />
@@ -204,15 +263,13 @@ export default function VaultDetailsModal({
                   </button>
                 ))}
               </div>
-              <span className="text-[10px] font-black uppercase text-black ml-0 xs:ml-auto bg-[#00E5FF] px-2 py-0.5 border border-black self-start xs:self-auto shrink-0">
-                Gasless EIP-7702
-              </span>
             </div>
 
             <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2">
               <input
                 type="text"
                 required
+                maxLength={MAX_MESSAGE_LENGTH}
                 placeholder="Write a sweet birthday greeting message..."
                 value={greetingMsg}
                 onChange={(e) => setGreetingMsg(e.target.value)}
@@ -220,7 +277,8 @@ export default function VaultDetailsModal({
               />
               <button
                 type="submit"
-                className="flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer w-full xs:w-auto"
+                disabled={isBusy}
+                className="flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer w-full xs:w-auto"
               >
                 <Send className="h-4 w-4 stroke-[3]" />
                 <span>Send Wish</span>
@@ -263,63 +321,46 @@ export default function VaultDetailsModal({
             )}
           </div>
         </div>
-
-        {/* Dynamic SVG NFT Modal Overlay */}
-        {showNftModal && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 p-4">
-            <div className="relative max-w-sm rounded-2xl border-4 border-black bg-[#FFFDF5] p-6 text-center shadow-[10px_10px_0px_0px_#000] text-black">
-              <button
-                onClick={() => setShowNftModal(false)}
-                className="absolute right-4 top-4 rounded-lg border-2 border-black bg-[#FF5252] p-1.5 text-black hover:bg-[#FF0000] hover:text-white transition-colors"
-              >
-                <X className="h-5 w-5 stroke-[3]" />
-              </button>
-
-              <Trophy className="h-10 w-10 text-black mx-auto mb-2 animate-bounce" />
-              <h3 className="text-2xl font-black uppercase text-black mb-1">Gift Vault Unlocked!</h3>
-              <p className="text-xs font-bold text-black mb-4">
-                Dynamic On-Chain SVG NFT Booklet Minted to {vault.recipientName}
-              </p>
-
-              {/* Render 100% On-Chain SVG Booklet */}
-              <div className="mx-auto my-3 overflow-hidden rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_#000]">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="100%" height="260">
-                  <defs>
-                    <linearGradient id="monadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#200052"/>
-                      <stop offset="50%" stopColor="#836EF9"/>
-                      <stop offset="100%" stopColor="#00E5FF"/>
-                    </linearGradient>
-                  </defs>
-                  <rect width="400" height="500" rx="24" fill="url(#monadGrad)"/>
-                  <rect x="15" y="15" width="370" height="470" rx="18" fill="none" stroke="#FFFFFF" strokeOpacity="0.2" strokeWidth="2"/>
-                  <text x="200" y="70" fontFamily="sans-serif" fontSize="14" fontWeight="bold" fill="#00E5FF" letterSpacing="3" textAnchor="middle">MONAD WISHES</text>
-                  <text x="200" y="100" fontFamily="sans-serif" fontSize="22" fontWeight="bold" fill="#FFFFFF" textAnchor="middle">🎂 Happy Birthday!</text>
-                  <circle cx="200" cy="180" r="45" fill="#FFFFFF" fillOpacity="0.1" stroke="#00E5FF" strokeWidth="2"/>
-                  <text x="200" y="195" fontFamily="sans-serif" fontSize="40" textAnchor="middle">🎁</text>
-                  <text x="200" y="260" fontFamily="sans-serif" fontSize="20" fontWeight="bold" fill="#FFFFFF" textAnchor="middle">{vault.recipientName}</text>
-                  <rect x="40" y="290" width="320" height="80" rx="12" fill="#000000" fillOpacity="0.3" stroke="#836EF9" strokeWidth="1.5"/>
-                  <text x="200" y="320" fontFamily="sans-serif" fontSize="12" fill="#A0A0B0" textAnchor="middle">TOTAL GIFT POOL + YIELD</text>
-                  <text x="200" y="352" fontFamily="sans-serif" fontSize="24" fontWeight="bold" fill="#00E5FF" textAnchor="middle">{totalPayoutMon.toFixed(2)} MON</text>
-                  <text x="200" y="420" fontFamily="sans-serif" fontSize="13" fill="#FFFFFF" fillOpacity="0.8" textAnchor="middle">👥 Contributed by {vault.greetings.length} Friends</text>
-                  <text x="200" y="455" fontFamily="sans-serif" fontSize="10" fill="#A0A0B0" textAnchor="middle">Verified on Monad Blockchain • 0.3s Block Time</text>
-                </svg>
-              </div>
-
-              <p className="text-xs font-black text-black bg-[#CCFF00] p-2 border-2 border-black mb-4">
-                ✓ Transferred {totalPayoutMon.toFixed(2)} MON (${totalPayoutUsd}) to Recipient Wallet
-              </p>
-
-              <button
-                onClick={() => setShowNftModal(false)}
-                className="w-full rounded-lg border-3 border-black bg-[#00E5FF] py-2.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:bg-[#CCFF00] transition-colors"
-              >
-                Close & Return
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Dynamic SVG NFT Modal Overlay */}
+      {showNftModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 p-4">
+          <div className="relative max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl border-4 border-black bg-[#FFFDF5] p-6 text-center shadow-[10px_10px_0px_0px_#000] text-black">
+            <button
+              onClick={() => setShowNftModal(false)}
+              aria-label="Close"
+              className="absolute right-4 top-4 rounded-lg border-2 border-black bg-[#FF5252] p-1.5 text-black hover:bg-[#FF0000] hover:text-white transition-colors"
+            >
+              <X className="h-5 w-5 stroke-[3]" />
+            </button>
+
+            <Trophy className="h-10 w-10 text-black mx-auto mb-2" />
+            <h3 className="text-2xl font-black uppercase text-black mb-1">Gift Vault Unlocked!</h3>
+            <p className="text-xs font-bold text-black mb-4">
+              On-chain SVG NFT Booklet #{vault.nftTokenId} minted to {vault.recipientName}
+            </p>
+
+            {/* The image comes from tokenURI, so this is exactly what is stored on-chain */}
+            <div className="mx-auto my-3 flex min-h-[260px] items-center justify-center overflow-hidden rounded-xl border-3 border-black bg-white shadow-[4px_4px_0px_0px_#000]">
+              {bookletImage ? (
+                <img src={bookletImage} alt={`NFT booklet for ${vault.recipientName}`} className="h-[260px] w-full object-contain" />
+              ) : (
+                <span className="p-4 text-xs font-black uppercase text-black">
+                  {bookletFailed ? 'Could not load the booklet from the chain.' : 'Loading booklet from the chain...'}
+                </span>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowNftModal(false)}
+              className="w-full rounded-lg border-3 border-black bg-[#00E5FF] py-2.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_#000] hover:bg-[#CCFF00] transition-colors"
+            >
+              Close & Return
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

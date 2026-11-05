@@ -15,13 +15,14 @@ MonadBirthdayVault.VaultCreated.handler(async ({ event, context }) => {
     birthdayTimestamp: event.params.birthdayTimestamp,
     totalCollected: 0n,
     isClaimed: false,
+    createdAt: BigInt(event.block.timestamp),
   };
 
   context.VaultEntity.set(entity);
 });
 
 MonadBirthdayVault.ContributionReceived.handler(async ({ event, context }) => {
-  const contributionId = `${event.params.vaultId.toString()}-${event.transaction.hash}`;
+  const contributionId = `${event.params.vaultId.toString()}-${event.transaction.hash}-${event.logIndex}`;
 
   const contribution = {
     id: contributionId,
@@ -30,6 +31,7 @@ MonadBirthdayVault.ContributionReceived.handler(async ({ event, context }) => {
     amount: event.params.amount,
     message: event.params.message,
     totalCollected: event.params.totalCollected,
+    timestamp: BigInt(event.block.timestamp),
     txHash: event.transaction.hash,
   };
 

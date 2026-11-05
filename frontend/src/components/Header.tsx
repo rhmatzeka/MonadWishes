@@ -1,19 +1,42 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
-import { usePrivy } from '@privy-io/react-auth'
-import { useBalance } from 'wagmi'
 import { formatEther } from 'viem'
 import { Wallet, LogIn, LogOut, Gift, Sparkles, Copy, Check, Coins, Menu, X } from 'lucide-react'
 
-import { monadTestnet } from '../config/monad'
+import { useWallet } from './WalletProvider'
+import { publicClient } from '../config/monad'
 
-export default function Header() {
-  const [mounted, setMounted] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+const BALANCE_REFRESH_MS = 15_000
+
+function useMonBalance(address?: string) {
+  const [balance, setBalance] = useState<bigint | null>(null)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setBalance(null)
+    if (!address) return
+    let isCurrent = true
+    const load = () => {
+      if (document.hidden) return
+      publicClient
+        .getBalance({ address: address as `0x${string}` })
+        .then((value) => {
+          if (isCurrent) setBalance(value)
+        })
+        .catch((err) => console.warn('Could not read MON balance:', err))
+    }
+    load()
+    const interval = setInterval(load, BALANCE_REFRESH_MS)
+    return () => {
+      isCurrent = false
+      clearInterval(interval)
+    }
+  }, [address])
+
+  return balance
+}
+
+export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-50 border-b-4 border-black bg-[#FFFDF5] px-4 shadow-[0_4px_0px_0px_#000]">
@@ -58,9 +81,7 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-3">
-            {mounted ? <PrivyHeaderControls /> : (
-              <div className="h-10 w-32 rounded-lg border-3 border-black bg-slate-200 animate-pulse shadow-[3px_3px_0px_0px_#000]" />
-            )}
+            <WalletControls />
           </div>
         </div>
 
@@ -123,11 +144,7 @@ export default function Header() {
 
             {/* Mobile Auth Controls at bottom of drawer */}
             <div className="pt-6 border-t-3 border-black">
-              {mounted ? (
-                <PrivyHeaderControls isMobile={true} onClose={() => setIsMenuOpen(false)} />
-              ) : (
-                <div className="h-12 w-full rounded-lg border-3 border-black bg-slate-200 animate-pulse shadow-[3px_3px_0px_0px_#000]" />
-              )}
+              <WalletControls isMobile={true} onClose={() => setIsMenuOpen(false)} />
             </div>
           </div>
         </>
@@ -136,26 +153,12 @@ export default function Header() {
   )
 }
 
-function PrivyHeaderControls({ isMobile = false, onClose = () => {} }: { isMobile?: boolean; onClose?: () => void }) {
-  const { login, logout, authenticated, user } = usePrivy()
+function WalletControls({ isMobile = false, onClose = () => {} }: { isMobile?: boolean; onClose?: () => void }) {
+  const { login, logout, authenticated, address: walletAddress, label: userIdentifier, connecting } = useWallet()
   const [copied, setCopied] = useState(false)
 
-  const walletAddress = user?.wallet?.address
-  const truncatedAddress = walletAddress
-    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
-    : null
-
-  const userIdentifier = user?.email?.address || user?.twitter?.username || truncatedAddress || 'Connected'
-
-  // Fetch live MON balance for the Privy wallet on Monad Testnet
-  const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
-    address: walletAddress as `0x${string}` | undefined,
-    chainId: monadTestnet.id,
-  })
-
-  const formattedBalance = balanceData
-    ? `${parseFloat(formatEther(balanceData.value)).toFixed(3)} MON`
-    : '0.000 MON'
+  const balance = useMonBalance(walletAddress)
+  const formattedBalance = balance === null ? '...' : `${parseFloat(formatEther(balance)).toFixed(3)} MON`
 
   const handleCopyAddress = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -173,7 +176,7 @@ function PrivyHeaderControls({ isMobile = false, onClose = () => {} }: { isMobil
         {walletAddress && (
           <div className={`flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#00E5FF] px-3 py-1.5 text-xs font-black text-black shadow-[3px_3px_0px_0px_#000] ${isMobile ? 'w-full py-2.5' : ''}`}>
             <Coins className="h-4 w-4 text-black" />
-            <span>{isBalanceLoading ? '...' : formattedBalance}</span>
+            <span>{formattedBalance}</span>
           </div>
         )}
 
@@ -214,14 +217,15 @@ function PrivyHeaderControls({ isMobile = false, onClose = () => {} }: { isMobil
 
   return (
     <button
+      disabled={connecting}
       onClick={() => {
         login()
         onClose()
       }}
-      className={`flex items-center justify-center gap-2 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2 text-xs sm:text-sm font-black text-black shadow-[4px_4px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all uppercase tracking-wide ${isMobile ? 'w-full py-3 text-sm' : 'sm:px-5'}`}
+      className={`disabled:opacity-60 disabled:pointer-events-none flex items-center justify-center gap-2 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2 text-xs sm:text-sm font-black text-black shadow-[4px_4px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all uppercase tracking-wide ${isMobile ? 'w-full py-3 text-sm' : 'sm:px-5'}`}
     >
       <LogIn className="h-4 w-4" />
-      <span>Login Wallet</span>
+      <span>{connecting ? 'Connecting...' : 'Login Wallet'}</span>
       <Sparkles className="h-4 w-4 text-black animate-spin" style={{ animationDuration: '3s' }} />
     </button>
   )

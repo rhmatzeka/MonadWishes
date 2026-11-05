@@ -8,6 +8,7 @@ type VaultEntity @entity {
   birthdayTimestamp: BigInt!
   totalCollected: BigInt!
   isClaimed: Boolean!
+  createdAt: BigInt!
 }
 
 type ContributionEntity @entity {
@@ -17,6 +18,7 @@ type ContributionEntity @entity {
   amount: BigInt!
   message: String!
   totalCollected: BigInt!
+  timestamp: BigInt!
   txHash: String!
 }
 

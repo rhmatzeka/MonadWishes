@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useWallets, usePrivy } from '@privy-io/react-auth'
-import { parseEther, createWalletClient, custom } from 'viem'
-import { CONTRACT_ADDRESSES, monadTestnet } from '../config/monad'
-import { fetchLiveVaults } from '../services/indexer'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { parseEther } from 'viem'
+import { CONTRACT_ADDRESSES, publicClient } from '../config/monad'
+import { useWallet } from '../components/WalletProvider'
+import { fetchDemoModeEnabled, fetchLiveVaults } from '../services/indexer'
 import type { VaultData } from '../components/VaultDetailsModal'
 import type { TxToastState } from '../components/TransactionToast'
 
-export const VAULT_ABI = [
+const VAULT_ABI = [
   {
     type: 'function',
     name: 'createVault',
@@ -41,47 +41,26 @@ export const VAULT_ABI = [
   },
 ] as const
 
-const INITIAL_VAULTS: VaultData[] = [
-  {
-    id: '1',
-    numericId: 1,
-    recipientName: 'Sarah Jenkins',
-    recipientAddress: '0x71CB290000000000000000000000000000000000',
-    creatorAddress: '0x3A291F3000000000000000000000000000000000',
-    targetAmountMon: 25.0,
-    totalCollectedMon: 18.5,
-    birthdayTimestamp: Date.now() + 14 * 86400000,
-    isClaimed: false,
-    greetings: [
-      { id: 'g1', sender: 'Bob (0x41...98)', amountMon: 5.0, message: 'Happy 25th Sarah! Have an amazing birthday 🎉', timestamp: new Date(Date.now() - 3600000) },
-      { id: 'g2', sender: 'Charlie (0x9F...A1)', amountMon: 3.5, message: 'Best wishes from the Monad dev team! 🚀', timestamp: new Date(Date.now() - 1800000) },
-      { id: 'g3', sender: 'Dave (0x88...C2)', amountMon: 10.0, message: 'Enjoy the yield and the party! 🎂', timestamp: new Date(Date.now() - 600000) },
-    ],
-  },
-  {
-    id: '2',
-    numericId: 2,
-    recipientName: 'Alex Rivera',
-    recipientAddress: '0x992D814000000000000000000000000000000000',
-    creatorAddress: '0x1F2C451000000000000000000000000000000000',
-    targetAmountMon: 50.0,
-    totalCollectedMon: 42.0,
-    birthdayTimestamp: Date.now() + 5 * 86400000,
-    isClaimed: false,
-    greetings: [
-      { id: 'g4', sender: 'Elena (0x02...89)', amountMon: 12.0, message: 'Happy birthday Alex! Let us celebrate 🥂', timestamp: new Date(Date.now() - 7200000) },
-      { id: 'g5', sender: 'Frank (0x55...34)', amountMon: 30.0, message: 'Big gift for a big friend! 🎁', timestamp: new Date(Date.now() - 2400000) },
-    ],
-  },
-]
+const POLL_MS = 20_000
+
+type VaultCall =
+  | { functionName: 'createVault'; args: readonly [`0x${string}`, string, bigint, bigint]; value?: undefined }
+  | { functionName: 'contribute'; args: readonly [bigint, string]; value: bigint }
+  | { functionName: 'releaseBirthdayGift'; args: readonly [bigint, boolean]; value?: undefined }
+
+const FALLBACK_GAS: Record<VaultCall['functionName'], bigint> = {
+  createVault: 850_000n,
+  contribute: 850_000n,
+  releaseBirthdayGift: 1_200_000n,
+}
 
 export function useVaultClient() {
-  const { user } = usePrivy()
-  const { wallets } = useWallets()
+  const { address: walletAddress, authenticated, login, getWalletClient } = useWallet()
 
-  const [vaults, setVaults] = useState<VaultData[]>(INITIAL_VAULTS)
-  const [isLoading, setIsLoading] = useState(false)
-  const [dataSource, setDataSource] = useState<'indexer' | 'rpc' | 'initial'>('initial')
+  const [vaults, setVaults] = useState<VaultData[]>([])
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [demoModeEnabled, setDemoModeEnabled] = useState(false)
+  const lastSnapshot = useRef('')
 
   const [toast, setToast] = useState<TxToastState>({
     isOpen: false,
@@ -90,292 +69,139 @@ export function useVaultClient() {
 
   const closeToast = () => setToast((prev) => ({ ...prev, isOpen: false }))
 
-  // Helper to get Viem walletClient from active Privy wallet
-  const getPrivyWalletClient = async () => {
-    if (!wallets || wallets.length === 0) {
-      throw new Error('Please login with Privy first!')
-    }
-
-    const userWalletAddress = user?.wallet?.address?.toLowerCase()
-
-    // 1. Try finding wallet by user's active Privy wallet address
-    let activeWallet = userWalletAddress
-      ? wallets.find((w) => w.address.toLowerCase() === userWalletAddress)
-      : null
-
-    // 2. Try finding Privy embedded wallet (OAuth / Social Login)
-    if (!activeWallet) {
-      activeWallet = wallets.find(
-        (w) => w.walletClientType === 'privy' || (w as any).connectorType === 'embedded'
-      )
-    }
-
-    // 3. Fallback to first available wallet
-    if (!activeWallet) {
-      activeWallet = wallets[0]
-    }
-
-    // 1. Switch chain on Privy SDK wallet object
-    let rawChainId: string | number = activeWallet.chainId
-    if (typeof rawChainId === 'string' && rawChainId.startsWith('eip155:')) {
-      rawChainId = rawChainId.replace('eip155:', '')
-    }
-    const numericChainId = typeof rawChainId === 'string' && rawChainId.startsWith('0x')
-      ? parseInt(rawChainId, 16)
-      : Number(rawChainId)
-
-    if (numericChainId !== monadTestnet.id) {
-      try {
-        await activeWallet.switchChain(monadTestnet.id)
-      } catch (err: any) {
-        console.warn('Privy SDK network switch warning:', err)
-      }
-    }
-
-    // 2. Get underlying EIP-1193 provider and force RPC network switch to Monad Testnet (0x279f)
-    const provider = await activeWallet.getEthereumProvider()
-    if (provider && provider.request) {
-      try {
-        await provider.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x279f' }],
-        })
-      } catch (switchErr: any) {
-        if (
-          switchErr?.code === 4902 ||
-          switchErr?.message?.includes('Unrecognized chain') ||
-          switchErr?.message?.includes('4902') ||
-          switchErr?.message?.includes('not found')
-        ) {
-          try {
-            await provider.request({
-              method: 'wallet_addEthereumChain',
-              params: [
-                {
-                  chainId: '0x279f',
-                  chainName: 'Monad Testnet',
-                  nativeCurrency: { name: 'Monad', symbol: 'MON', decimals: 18 },
-                  rpcUrls: ['https://testnet-rpc.monad.xyz'],
-                  blockExplorerUrls: ['https://testnet.monadexplorer.com'],
-                },
-              ],
-            })
-            await provider.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: '0x279f' }],
-            })
-          } catch (addErr) {
-            console.warn('Wallet addEthereumChain warning:', addErr)
-          }
-        }
-      }
-    }
-
-    // 3. Wrap provider to guarantee eth_chainId returns Monad Testnet (0x279f) to Viem assertions
-    const customProvider = {
-      ...provider,
-      request: async (args: { method: string; params?: any[] }) => {
-        if (args.method === 'eth_chainId') {
-          return '0x279f'
-        }
-        return provider.request(args)
-      },
-    }
-
-    return createWalletClient({
-      account: activeWallet.address as `0x${string}`,
-      chain: monadTestnet,
-      transport: custom(customProvider),
-    })
-  }
-
-  // Refetch live vaults from Envio Indexer or RPC Fallback
   const refetch = useCallback(async () => {
-    setIsLoading(true)
     try {
-      const { vaults: liveVaults, source } = await fetchLiveVaults()
-      if (liveVaults.length > 0) {
+      const { vaults: liveVaults } = await fetchLiveVaults()
+      const snapshot = JSON.stringify(liveVaults)
+      if (snapshot !== lastSnapshot.current) {
+        lastSnapshot.current = snapshot
         setVaults(liveVaults)
-        setDataSource(source)
       }
+      setStatus('ready')
     } catch (err) {
-      console.warn('Failed to refetch live vaults:', err)
-    } finally {
-      setIsLoading(false)
+      console.warn('Failed to load vaults:', err)
+      // Keep showing the last good list; only an empty page needs the error state.
+      setStatus((current) => (current === 'loading' || !lastSnapshot.current ? 'error' : current))
     }
   }, [])
 
   useEffect(() => {
     refetch()
+    fetchDemoModeEnabled().then(setDemoModeEnabled)
+
+    const poll = setInterval(() => {
+      if (!document.hidden) refetch()
+    }, POLL_MS)
+    const onVisible = () => {
+      if (!document.hidden) refetch()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      clearInterval(poll)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [refetch])
 
-  // 1. Create Vault
-  const createVault = async (data: {
+  const sendVaultTx = async (
+    call: VaultCall,
+    messages: { submitting: string; mining: string; success: string; failure: string },
+  ) => {
+    if (!authenticated) {
+      login()
+      return false
+    }
+
+    let hash: `0x${string}` | undefined
+    try {
+      setToast({ isOpen: true, status: 'submitting', message: messages.submitting })
+
+      const walletClient = await getWalletClient()
+      const contract = { address: CONTRACT_ADDRESSES.vault, abi: VAULT_ABI, account: walletClient.account, ...call }
+
+      // Surfaces the contract's revert reason before the wallet asks for a signature.
+      await publicClient.simulateContract(contract as any)
+
+      // Monad charges for the gas limit rather than the gas used, so keep the limit close to the real cost.
+      const gas = await publicClient
+        .estimateContractGas(contract as any)
+        .then((estimate) => (estimate * 12n) / 10n)
+        .catch(() => FALLBACK_GAS[call.functionName])
+
+      hash = await walletClient.writeContract({ ...contract, gas } as any)
+      setToast({ isOpen: true, status: 'mining', txHash: hash, message: messages.mining })
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash })
+      if (receipt.status !== 'success') {
+        throw new Error('The transaction reverted on-chain.')
+      }
+
+      await refetch()
+      setToast({ isOpen: true, status: 'success', txHash: hash, message: messages.success })
+      return true
+    } catch (err: any) {
+      console.error(`${call.functionName} failed:`, err)
+      setToast({
+        isOpen: true,
+        status: 'error',
+        txHash: hash,
+        errorMessage: err?.shortMessage || err?.message || messages.failure,
+      })
+      return false
+    }
+  }
+
+  const createVault = (data: {
     recipientAddress: string
     recipientName: string
     durationDays: number
-    targetAmountMon: number
-  }) => {
-    try {
-      setToast({
-        isOpen: true,
-        status: 'submitting',
-        message: `Creating Birthday Vault for ${data.recipientName} on Monad Testnet...`,
-      })
-
-      const walletClient = await getPrivyWalletClient()
-
-      const hash = await walletClient.writeContract({
-        address: CONTRACT_ADDRESSES.vault,
-        abi: VAULT_ABI,
+    targetAmountMon: string
+  }) =>
+    sendVaultTx(
+      {
         functionName: 'createVault',
         args: [
           data.recipientAddress as `0x${string}`,
           data.recipientName,
           BigInt(data.durationDays),
-          parseEther(data.targetAmountMon.toString()),
+          parseEther(data.targetAmountMon),
         ],
-        gas: 850_000n,
-      })
+      },
+      {
+        submitting: `Creating Birthday Vault for ${data.recipientName} on Monad Testnet...`,
+        mining: 'Waiting for confirmation on Monad...',
+        success: `Birthday Vault for ${data.recipientName} created on Monad!`,
+        failure: 'Transaction rejected or failed.',
+      },
+    )
 
-      setToast({
-        isOpen: true,
-        status: 'mining',
-        txHash: hash,
-        message: 'Mining transaction on Monad (0.3s Block Time)...',
-      })
+  const contribute = (vault: VaultData, amountMon: string, message: string) =>
+    sendVaultTx(
+      { functionName: 'contribute', args: [BigInt(vault.numericId), message], value: parseEther(amountMon) },
+      {
+        submitting: `Sending ${amountMon} MON contribution & wish on Monad Testnet...`,
+        mining: `Transferring ${amountMon} MON to the vault...`,
+        success: `Contributed ${amountMon} MON + wish to the vault!`,
+        failure: 'Contribution failed.',
+      },
+    )
 
-      setTimeout(() => {
-        setToast({
-          isOpen: true,
-          status: 'success',
-          txHash: hash,
-          message: `Birthday Vault for ${data.recipientName} created live on Monad Blockchain!`,
-        })
-        refetch()
-      }, 1500)
-
-      return hash
-    } catch (err: any) {
-      console.error('Create Vault error:', err)
-      setToast({
-        isOpen: true,
-        status: 'error',
-        errorMessage: err?.shortMessage || err?.message || 'Transaction rejected or failed.',
-      })
-      throw err
-    }
-  }
-
-  // 2. Contribute
-  const contribute = async (vaultId: string, amountMon: number, message: string) => {
-    const targetVault = vaults.find((v) => v.id === vaultId)
-    const numericId = targetVault?.numericId || parseInt(vaultId) || 1
-
-    try {
-      setToast({
-        isOpen: true,
-        status: 'submitting',
-        message: `Sending ${amountMon} MON contribution & wish on Monad Testnet...`,
-      })
-
-      const walletClient = await getPrivyWalletClient()
-
-      const hash = await walletClient.writeContract({
-        address: CONTRACT_ADDRESSES.vault,
-        abi: VAULT_ABI,
-        functionName: 'contribute',
-        args: [BigInt(numericId), message],
-        value: parseEther(amountMon.toString()),
-        gas: 850_000n,
-      })
-
-      setToast({
-        isOpen: true,
-        status: 'mining',
-        txHash: hash,
-        message: `Transferring ${amountMon} MON to Vault contract...`,
-      })
-
-      setTimeout(() => {
-        setToast({
-          isOpen: true,
-          status: 'success',
-          txHash: hash,
-          message: `Successfully contributed ${amountMon} MON + wish to Vault!`,
-        })
-        refetch()
-      }, 1500)
-
-      return hash
-    } catch (err: any) {
-      console.error('Contribute error:', err)
-      setToast({
-        isOpen: true,
-        status: 'error',
-        errorMessage: err?.shortMessage || err?.message || 'Contribution failed.',
-      })
-      throw err
-    }
-  }
-
-  // 3. Release Birthday Gift
-  const releaseGift = async (vaultId: string, isDemoMode: boolean) => {
-    const targetVault = vaults.find((v) => v.id === vaultId)
-    const numericId = targetVault?.numericId || parseInt(vaultId) || 1
-
-    try {
-      setToast({
-        isOpen: true,
-        status: 'submitting',
-        message: isDemoMode
-          ? 'Executing Instant Demo Time Travel Release on Monad Testnet...'
-          : 'Releasing Birthday Gift Pool & Yield to Recipient...',
-      })
-
-      const walletClient = await getPrivyWalletClient()
-
-      const hash = await walletClient.writeContract({
-        address: CONTRACT_ADDRESSES.vault,
-        abi: VAULT_ABI,
-        functionName: 'releaseBirthdayGift',
-        args: [BigInt(numericId), isDemoMode],
-        gas: 1_200_000n,
-      })
-
-      setToast({
-        isOpen: true,
-        status: 'mining',
-        txHash: hash,
-        message: 'Minting On-Chain SVG NFT Booklet & Transferring MON + Yield...',
-      })
-
-      setTimeout(() => {
-        setToast({
-          isOpen: true,
-          status: 'success',
-          txHash: hash,
-          message: 'Gift Pool + Yield released & Dynamic SVG NFT Booklet minted!',
-        })
-        refetch()
-      }, 1500)
-
-      return hash
-    } catch (err: any) {
-      console.error('Release Gift error:', err)
-      setToast({
-        isOpen: true,
-        status: 'error',
-        errorMessage: err?.shortMessage || err?.message || 'Release gift failed.',
-      })
-      throw err
-    }
-  }
+  const releaseGift = (vault: VaultData, isDemoMode: boolean) =>
+    sendVaultTx(
+      { functionName: 'releaseBirthdayGift', args: [BigInt(vault.numericId), isDemoMode] },
+      {
+        submitting: isDemoMode ? 'Running the demo release on Monad Testnet...' : 'Releasing the gift pool to the recipient...',
+        mining: 'Minting the on-chain NFT booklet and transferring MON...',
+        success: 'Gift released and NFT booklet minted!',
+        failure: 'Release failed.',
+      },
+    )
 
   return {
     vaults,
-    isLoading,
-    dataSource,
+    status,
+    demoModeEnabled,
+    walletAddress,
     toast,
     closeToast,
     createVault,

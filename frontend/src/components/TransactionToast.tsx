@@ -1,4 +1,3 @@
-import React from 'react'
 import { ExternalLink, CheckCircle2, Loader2, AlertCircle, X } from 'lucide-react'
 
 export interface TxToastState {
