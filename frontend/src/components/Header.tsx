@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { formatEther } from 'viem'
-import { Wallet, LogIn, LogOut, Gift, Sparkles, Copy, Check, Coins, Menu, X } from 'lucide-react'
+import { ArrowUpRightIcon, CheckIcon, CoinsIcon, CopyIcon, GiftIcon, ListIcon, SignInIcon, SignOutIcon, SparkleIcon, WalletIcon, XIcon } from '@phosphor-icons/react'
 
 import { useWallet } from './WalletProvider'
 import { publicClient } from '../config/monad'
@@ -48,7 +48,7 @@ export default function Header() {
           onClick={() => setIsMenuOpen(false)}
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#CCFF00] border-3 border-black shadow-[3px_3px_0px_0px_#000] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] transition-all">
-            <Gift className="h-6 w-6 text-black" />
+            <GiftIcon weight="bold" className="h-6 w-6 text-black" />
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-black tracking-tight text-black uppercase bg-[#CCFF00] px-2 border-2 border-black shadow-[2px_2px_0px_0px_#000] leading-none py-0.5">
@@ -74,9 +74,9 @@ export default function Header() {
               href="https://testnet.monadexplorer.com"
               target="_blank"
               rel="noreferrer"
-              className="hover:bg-[#00E5FF] px-2 py-1 border-2 border-black shadow-[2px_2px_0px_0px_#000] transition-all text-black"
+              className="inline-flex items-center gap-1 hover:bg-[#00E5FF] px-2 py-1 border-2 border-black shadow-[2px_2px_0px_0px_#000] transition-all text-black"
             >
-              Explorer ↗
+              Explorer <ArrowUpRightIcon weight="bold" className="h-4 w-4" aria-hidden="true" />
             </a>
           </div>
 
@@ -91,7 +91,7 @@ export default function Header() {
           className="md:hidden flex h-11 w-11 items-center justify-center rounded-lg bg-[#CCFF00] border-3 border-black shadow-[3px_3px_0px_0px_#000] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer text-black"
           aria-label="Toggle Menu"
         >
-          {isMenuOpen ? <X className="h-6 w-6 stroke-[3]" /> : <Menu className="h-6 w-6 stroke-[3]" />}
+          {isMenuOpen ? <XIcon weight="bold" className="h-6 w-6" /> : <ListIcon weight="bold" className="h-6 w-6" />}
         </button>
       </nav>
 
@@ -114,9 +114,10 @@ export default function Header() {
                 </span>
                 <button
                   onClick={() => setIsMenuOpen(false)}
+                  aria-label="Close menu"
                   className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FF5252] border-3 border-black shadow-[2px_2px_0px_0px_#000] text-black font-black"
                 >
-                  <X className="h-5 w-5 stroke-[3]" />
+                  <XIcon weight="bold" className="h-5 w-5" />
                 </button>
               </div>
 
@@ -135,9 +136,9 @@ export default function Header() {
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => setIsMenuOpen(false)}
-                  className="hover:bg-[#00E5FF] px-4 py-3 border-3 border-black shadow-[3px_3px_0px_0px_#000] transition-all text-center bg-white text-black"
+                  className="inline-flex items-center justify-center gap-1 hover:bg-[#00E5FF] px-4 py-3 border-3 border-black shadow-[3px_3px_0px_0px_#000] transition-all text-center bg-white text-black"
                 >
-                  Explorer ↗
+                  Explorer <ArrowUpRightIcon weight="bold" className="h-4 w-4" aria-hidden="true" />
                 </a>
               </div>
             </div>
@@ -175,14 +176,14 @@ function WalletControls({ isMobile = false, onClose = () => {} }: { isMobile?: b
         {/* Monad Native Token Balance Badge */}
         {walletAddress && (
           <div className={`flex items-center justify-center gap-1.5 rounded-lg border-3 border-black bg-[#00E5FF] px-3 py-1.5 text-xs font-black text-black shadow-[3px_3px_0px_0px_#000] ${isMobile ? 'w-full py-2.5' : ''}`}>
-            <Coins className="h-4 w-4 text-black" />
+            <CoinsIcon weight="bold" className="h-4 w-4 text-black" />
             <span>{formattedBalance}</span>
           </div>
         )}
 
         {/* User Identity / Wallet Address Pill */}
         <div className={`flex items-center justify-center gap-2 rounded-lg border-3 border-black bg-[#FFD600] px-3 py-1.5 text-xs font-black text-black shadow-[3px_3px_0px_0px_#000] ${isMobile ? 'w-full py-2.5' : 'max-w-[150px] sm:max-w-none'}`}>
-          <Wallet className="h-4 w-4 text-black shrink-0" />
+          <WalletIcon weight="bold" className="h-4 w-4 text-black shrink-0" />
           <span className="truncate max-w-[70px] sm:max-w-[120px]">{userIdentifier}</span>
 
           {walletAddress && (
@@ -190,11 +191,12 @@ function WalletControls({ isMobile = false, onClose = () => {} }: { isMobile?: b
               onClick={handleCopyAddress}
               className="ml-1 rounded border-2 border-black bg-white p-1 text-black hover:bg-[#CCFF00] transition-all flex items-center justify-center shadow-[1px_1px_0px_0px_#000] shrink-0 w-6 h-6"
               title="Copy Privy Wallet Address"
+              aria-label="Copy wallet address"
             >
               {copied ? (
-                <Check className="h-3.5 w-3.5 text-black" />
+                <CheckIcon weight="bold" className="h-3.5 w-3.5 text-black" />
               ) : (
-                <Copy className="h-3.5 w-3.5 text-black" />
+                <CopyIcon weight="bold" className="h-3.5 w-3.5 text-black" />
               )}
             </button>
           )}
@@ -207,8 +209,9 @@ function WalletControls({ isMobile = false, onClose = () => {} }: { isMobile?: b
           }}
           className={`flex items-center justify-center gap-2 rounded-lg border-3 border-black bg-[#FF5252] text-black hover:bg-[#FF0000] hover:text-white shadow-[3px_3px_0px_0px_#000] transition-all font-black shrink-0 ${isMobile ? 'w-full py-2.5' : 'p-2'}`}
           title="Disconnect"
+          aria-label="Disconnect"
         >
-          <LogOut className="h-4 w-4" />
+          <SignOutIcon weight="bold" className="h-4 w-4" />
           {isMobile && <span>Disconnect</span>}
         </button>
       </div>
@@ -224,9 +227,9 @@ function WalletControls({ isMobile = false, onClose = () => {} }: { isMobile?: b
       }}
       className={`disabled:opacity-60 disabled:pointer-events-none flex items-center justify-center gap-2 rounded-lg border-3 border-black bg-[#CCFF00] px-4 py-2 text-xs sm:text-sm font-black text-black shadow-[4px_4px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all uppercase tracking-wide ${isMobile ? 'w-full py-3 text-sm' : 'sm:px-5'}`}
     >
-      <LogIn className="h-4 w-4" />
+      <SignInIcon weight="bold" className="h-4 w-4" />
       <span>{connecting ? 'Connecting...' : 'Login Wallet'}</span>
-      <Sparkles className="h-4 w-4 text-black animate-spin" style={{ animationDuration: '3s' }} />
+      <SparkleIcon weight="bold" className="h-4 w-4 text-black animate-spin" style={{ animationDuration: '3s' }} />
     </button>
   )
 }
