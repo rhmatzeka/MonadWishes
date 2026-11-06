@@ -18,8 +18,8 @@ export const publicClient = createPublicClient({
 
 // Deployed Smart Contract Addresses on Monad Testnet
 export const CONTRACT_ADDRESSES = {
-  vault: (import.meta.env.VITE_VAULT_ADDRESS || '0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764') as `0x${string}`,
-  nft: (import.meta.env.VITE_NFT_ADDRESS || '0x80994d808075041964605fCA72E7858b861c2c01') as `0x${string}`,
+  vault: (import.meta.env.VITE_VAULT_ADDRESS || '0x24d1C9A1424CeEF852Dfcb65c59726a870e635B8') as `0x${string}`,
+  nft: (import.meta.env.VITE_NFT_ADDRESS || '0xC69aE4138DBc33389B1b25130f68E91b2A0169B8') as `0x${string}`,
   pyth: '0x2880aB155794e7179c9eE2e38200202908C17B43' as `0x${string}`,
 }
 

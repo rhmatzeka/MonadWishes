@@ -48,7 +48,8 @@ type VaultCall =
   | { functionName: 'contribute'; args: readonly [bigint, string]; value: bigint }
   | { functionName: 'releaseBirthdayGift'; args: readonly [bigint, boolean]; value?: undefined }
 
-const FALLBACK_GAS: Record<VaultCall['functionName'], bigint> = {
+// Upper bound and fallback. An estimate can come back absurdly high, and the RPC rejects those outright.
+const MAX_GAS: Record<VaultCall['functionName'], bigint> = {
   createVault: 850_000n,
   contribute: 850_000n,
   releaseBirthdayGift: 1_200_000n,
@@ -123,10 +124,14 @@ export function useVaultClient() {
       await publicClient.simulateContract(contract as any)
 
       // Monad charges for the gas limit rather than the gas used, so keep the limit close to the real cost.
+      const maxGas = MAX_GAS[call.functionName]
       const gas = await publicClient
         .estimateContractGas(contract as any)
-        .then((estimate) => (estimate * 12n) / 10n)
-        .catch(() => FALLBACK_GAS[call.functionName])
+        .then((estimate) => {
+          const padded = (estimate * 12n) / 10n
+          return padded < maxGas ? padded : maxGas
+        })
+        .catch(() => maxGas)
 
       hash = await walletClient.writeContract({ ...contract, gas } as any)
       setToast({ isOpen: true, status: 'mining', txHash: hash, message: messages.mining })

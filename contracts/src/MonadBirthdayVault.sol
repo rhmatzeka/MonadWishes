@@ -8,14 +8,10 @@ import "./MonadBirthdayNFT.sol";
 /**
  * @title MonadBirthdayVault
  * @notice Time-Locked Birthday Gift Vault & Social Yield Pool on Monad Blockchain.
- * @dev Integrates Monad Native Staking Precompile (0x1000) with internal math fallback & Dynamic On-Chain SVG NFT Booklet minting.
+ * @dev Contributions stay in this contract. Yield is a bonus paid from a reserve, and claims mint a Dynamic On-Chain SVG NFT Booklet.
  */
 contract MonadBirthdayVault is Ownable, ReentrancyGuard {
     
-    // Monad Protocol Constants
-    address public constant STAKING_PRECOMPILE = 0x0000000000000000000000000000000000001000;
-    address public constant DEFAULT_VALIDATOR = 0x0000000000000000000000000000000000000001;
-
     struct Greeting {
         address sender;
         uint256 amount;
@@ -67,12 +63,6 @@ contract MonadBirthdayVault is Ownable, ReentrancyGuard {
         uint256 amount,
         string message,
         uint256 totalCollected
-    );
-    event StakedInMonadPrecompile(
-        uint256 indexed vaultId,
-        address indexed targetPrecompile,
-        uint256 amount,
-        bool precompileSuccess
     );
     event GiftClaimed(
         uint256 indexed vaultId,
@@ -190,22 +180,7 @@ contract MonadBirthdayVault is Ownable, ReentrancyGuard {
             timestamp: block.timestamp
         }));
 
-        // Attempt Monad Native Staking Precompile (0x1000) call
-        bool precompileSuccess = tryStakeInMonadPrecompile(msg.value);
-
         emit ContributionReceived(_vaultId, msg.sender, msg.value, _message, vault.totalCollected);
-        emit StakedInMonadPrecompile(_vaultId, STAKING_PRECOMPILE, msg.value, precompileSuccess);
-    }
-
-    /**
-     * @dev Low-level call to Monad Native Staking Precompile at 0x1000
-     * Function signature: delegate(address validator, uint256 amount)
-     */
-    function tryStakeInMonadPrecompile(uint256 _amount) internal returns (bool) {
-        if (_amount == 0) return false;
-        bytes memory data = abi.encodeWithSignature("delegate(address,uint256)", DEFAULT_VALIDATOR, _amount);
-        (bool success, ) = STAKING_PRECOMPILE.call{value: 0}(data);
-        return success;
     }
 
     /**

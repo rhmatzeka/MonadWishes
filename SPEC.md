@@ -16,7 +16,7 @@ When friend groups organize birthday gift pools 1 month prior to the event, conv
 
 **MonadWishes** is a Social Birthday Gift Vault & Micro-Yield Pool built specifically for the **Monad Blockchain**:
 - **Time-Locked Gift Vaults**: Pools locked until the target birthday timestamp (e.g. 30 days).
-- **Auto-Staking & Yield Generation**: Capital is delegated to Monad Native Staking (`0x1000` precompile) with graceful math fallback, generating 0.5%/month yield during wait periods.
+- **Yield Bonus**: 0.5% per 30 days, counted up to the birthday and paid from a protocol reserve. Real delegation to Monad staking (`0x1000`) is not built; the old call used a wrong selector and was removed.
 - **Sub-Second Micro-Contributions & Greeting Feed**: 300ms–400ms block times and sub-cent gas fees ($0.001) allow real-time micro-donations and on-chain messages.
 - **Envio HyperIndex GraphQL Engine**: Sub-second event indexing for `VaultCreated`, `ContributionReceived`, and `GiftClaimed` with automatic viem RPC `readContract` fallback.
 - **Dynamic On-Chain SVG Memory Booklet NFT**: Upon claim, recipients receive a 100% on-chain SVG NFT containing gift stats, total yield, and greeting records.
@@ -47,8 +47,8 @@ When friend groups organize birthday gift pools 1 month prior to the event, conv
 
 ### Core Architecture & Modules
 - **Smart Contract Layer (`contracts/src/`)**:
-  - `MonadBirthdayVault.sol`: Address `0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764`. Manages vault lifecycle, greeting storage, Monad `0x1000` precompile delegation, and yield calculation (`calculateYieldBonus`).
-  - `MonadBirthdayNFT.sol`: Address `0x80994d808075041964605fCA72E7858b861c2c01`. Dynamic base64-encoded on-chain SVG booklet artwork.
+  - `MonadBirthdayVault.sol`: Address `0x24d1C9A1424CeEF852Dfcb65c59726a870e635B8`. Manages vault lifecycle, greeting storage, the yield reserve and yield calculation (`calculateYieldBonus`).
+  - `MonadBirthdayNFT.sol`: Address `0xC69aE4138DBc33389B1b25130f68E91b2A0169B8`. Dynamic base64-encoded on-chain SVG booklet artwork.
 - **Indexer Layer (`indexer/`)**:
   - Envio HyperIndex indexing `VaultCreated`, `ContributionReceived`, and `GiftClaimed` events on Monad Testnet (`10143`).
   - Schema entities: `VaultEntity`, `ContributionEntity`, `GiftClaimEntity`.
@@ -66,7 +66,7 @@ When friend groups organize birthday gift pools 1 month prior to the event, conv
 - **ADR-002 (Protocol Reserve Yield Pool & Ticker)**: Vault contract includes `receive() external payable` for reserve funding. UI calculates sub-second live yield growth per second.
 - **ADR-003 (Network Auto-Switching UI)**: Prompt user when connected wallet chainId != `10143` to avoid `ContractFunctionExecutionError`.
 - **ADR-004 (Memory NFT Viewer & Dual Claim Mode)**: Render SVG booklet inline via `tokenURI(tokenId)` and provide both Real Time-Lock & Demo Time Travel release triggers.
-- **ADR-005 (Indexer Config Sync)**: `indexer/config.yaml` synced to Vault contract `0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764`.
+- **ADR-005 (Indexer Config Sync)**: `indexer/config.yaml` synced to Vault contract `0x24d1C9A1424CeEF852Dfcb65c59726a870e635B8`.
 - **ADR-006 (Sub-Second Live Yield Counter)**: Live ticker animation updated every 1000ms in frontend UI.
 - **ADR-007 (Deep Unified MonadVaultClient Module)**: Encapsulate reads, writes, dual-source fallback, and automated refetching into a unified `useVaultClient` hook interface.
 
@@ -101,5 +101,5 @@ When friend groups organize birthday gift pools 1 month prior to the event, conv
 - **Pitch Checklist (3-Minute Presentation)**:
   1. UX Layer: Privy Embedded Social Login + Network Auto-Switch Banner.
   2. Indexer Layer: Envio HyperIndex Sub-second Monad Event Indexing & Viem Fallback.
-  3. Smart Contract Layer: Monad Staking Precompile (`0x1000`) + Reserve Pool + Dynamic SVG NFT.
+  3. Smart Contract Layer: Yield Reserve Pool + Dynamic SVG NFT.
   4. Execution Layer: High-Frequency Sub-Second Live Yield Counter Ticker (0.3s Monad block time).

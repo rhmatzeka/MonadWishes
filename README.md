@@ -6,7 +6,7 @@
 [![Envio Indexer](https://img.shields.io/badge/Envio-HyperIndex_GraphQL-FFD600?style=for-the-badge)](https://envio.dev)
 [![Pyth Network](https://img.shields.io/badge/Pyth-Live_MON%2FUSD-00E5FF?style=for-the-badge)](https://pyth.network)
 
-> **MonadWishes** is a decentralized, time-locked social birthday gift vault and yield-generating pool built natively on the **Monad Blockchain**. Friends & family contribute **MON** tokens along with personalized greetings. While locked, contributions are deployed into Monad's native staking protocol to generate yield. On the recipient's birthday, the pool unlocks, transferring accumulated MON + yield and minting a **Dynamic 100% On-Chain SVG NFT Gift Booklet**.
+> **MonadWishes** is a decentralized, time-locked social birthday gift vault and yield-generating pool built natively on the **Monad Blockchain**. Friends & family contribute **MON** tokens along with personalized greetings. While locked, the pool earns a yield bonus from a protocol reserve. On the recipient's birthday, the pool unlocks, transferring accumulated MON + yield and minting a **Dynamic 100% On-Chain SVG NFT Gift Booklet**.
 
 ---
 
@@ -15,8 +15,8 @@
 ## 🌐 Live Application & Links
 
 - **🚀 Live Web App**: [https://monadwishes.rahmateka.my.id/](https://monadwishes.rahmateka.my.id/)
-- **📜 Vault Smart Contract (Monad Testnet)**: [`0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764`](https://testnet.monadexplorer.com/address/0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764)
-- **🎨 NFT Booklet Contract (Monad Testnet)**: [`0x80994d808075041964605fCA72E7858b861c2c01`](https://testnet.monadexplorer.com/address/0x80994d808075041964605fCA72E7858b861c2c01)
+- **📜 Vault Smart Contract (Monad Testnet)**: [`0x24d1C9A1424CeEF852Dfcb65c59726a870e635B8`](https://testnet.monadexplorer.com/address/0x24d1C9A1424CeEF852Dfcb65c59726a870e635B8)
+- **🎨 NFT Booklet Contract (Monad Testnet)**: [`0xC69aE4138DBc33389B1b25130f68E91b2A0169B8`](https://testnet.monadexplorer.com/address/0xC69aE4138DBc33389B1b25130f68E91b2A0169B8)
 
 ---
 
@@ -25,10 +25,10 @@
 ### 1. ⚡ Exploiting Monad's 0.3s Block Time & Sub-Second Finality
 Monad's high-throughput parallel execution engine provides **0.3-second block time** and instant finality. MonadWishes leverages this speed to deliver real-time contribution feedback, instant wish wall updates, and sub-second transaction mining toasts.
 
-### 2. 🥩 Monad Native Staking Precompile Integration (`0x1000`)
-> **Status:** real delegation is not live yet. The vault calls the staking precompile at `0x0000000000000000000000000000000000001000` but sends no MON, so contributions stay in the vault.
+### 2. 🥩 Yield Bonus from a Protocol Reserve
+> **Status:** real delegation to Monad's staking precompile (`0x1000`) is not built. Contributions stay in the vault contract.
 
-The yield shown today is a bonus of 0.5% per 30 days, counted up to the birthday and paid from a protocol reserve (MON sent straight to the vault contract). When the reserve is empty the recipient still gets the full principal.
+The yield is a bonus of 0.5% per 30 days, counted up to the birthday and paid from a protocol reserve (MON sent straight to the vault contract). When the reserve is empty the recipient still gets the full principal.
 
 ### 3. 🎨 Dynamic 100% On-Chain SVG NFT Booklet
 When the birthday recipient releases their gift, the contract automatically mints a **Monad Birthday Gift NFT Booklet**. The metadata and visual vector graphics are generated **100% on-chain** in pure Solidity string formatting—storing the recipient's name, total MON collected, total greetings count, and yield generated without external IPFS dependencies.
@@ -49,22 +49,22 @@ Users can log in seamlessly using **Google, Twitter, Email, or Passkeys** via Pr
 ```
                        ┌──────────────────────────────────────────┐
                        │           MonadBirthdayVault             │
-                       │ 0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764 │
+                       │ 0x24d1C9A1424CeEF852Dfcb65c59726a870e635B8 │
                        └────────────────────┬─────────────────────┘
                                             │
            ┌────────────────────────────────┼────────────────────────────────┐
            │                                │                                │
            ▼                                ▼                                ▼
 ┌─────────────────────┐          ┌──────────────────────┐        ┌──────────────────────┐
-│  Monad Staking      │          │  MonadBirthdayNFT    │        │  Pyth Network Oracle │
-│  Precompile (0x1000)│          │  (On-Chain SVG)      │        │  (HERMES Price Feed) │
+│  Yield Reserve      │          │  MonadBirthdayNFT    │        │  Pyth Network Oracle │
+│  (MON in the vault) │          │  (On-Chain SVG)      │        │  (On-Chain Price)    │
 └─────────────────────┘          └──────────────────────┘        └──────────────────────┘
 ```
 
 ### Core Functions
 
 - `createVault(address _recipient, string _recipientName, uint256 _durationInDays, uint256 _targetAmount)`: Deploys a new time-locked birthday vault pool.
-- `contribute(uint256 _vaultId, string _message)`: Accepts MON contribution + wish message, updates vault principal, and stakes into Monad Precompile `0x1000`.
+- `contribute(uint256 _vaultId, string _message)`: Accepts a MON contribution + wish message and adds it to the vault principal.
 - `releaseBirthdayGift(uint256 _vaultId, bool _isDemoMode)`: Unlocks the pool on or after the birthday, adds the yield bonus the reserve can cover, transfers MON to the recipient, and mints the On-Chain SVG NFT Booklet. Anyone can call it after the birthday. Demo mode lets the creator, recipient or owner release early.
 - `setDemoMode(bool _enabled)`: Owner switch for demo release. Turn it off for any real use.
 
@@ -121,8 +121,8 @@ Create `.env.local` inside `frontend/`:
 
 ```env
 VITE_PRIVY_APP_ID=your-privy-app-id
-VITE_VAULT_ADDRESS=0xd3146Aabe8a4f50426d0d12A67ecca0ebEB06764
-VITE_NFT_ADDRESS=0x80994d808075041964605fCA72E7858b861c2c01
+VITE_VAULT_ADDRESS=0x24d1C9A1424CeEF852Dfcb65c59726a870e635B8
+VITE_NFT_ADDRESS=0xC69aE4138DBc33389B1b25130f68E91b2A0169B8
 # Optional
 # VITE_INDEXER_GRAPHQL_URL=https://your-indexer/v1/graphql
 ```
@@ -159,7 +159,7 @@ forge script script/Deploy.s.sol:DeployMonadWishes \
 
 ## 🎯 Hackathon Highlights
 
-- **Built For Monad**: Built from the ground up for Monad's EVM execution engine, leveraging native precompiles and 0.3s block speed.
+- **Built For Monad**: Built from the ground up for Monad's EVM execution engine, leveraging its 0.3s block speed.
 - **Real Use Case**: Solves group birthday gifting by combining pool funding, yield generation, social greetings, and collectible digital memories.
 - **Live on Testnet**: Deployed on Monad Testnet and Vercel.
 
